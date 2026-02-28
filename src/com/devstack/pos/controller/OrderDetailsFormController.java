@@ -93,9 +93,6 @@ public class OrderDetailsFormController extends BaseController {
     private TableColumn<OrderTm, Double> colTotal;
 
     @FXML
-    private TableColumn<OrderTm, String> colOrderType;
-
-    @FXML
     private TableColumn<OrderTm, JFXButton> colAction;
 
     @FXML
@@ -127,23 +124,25 @@ public class OrderDetailsFormController extends BaseController {
         });
         colDiscount.setCellValueFactory(new PropertyValueFactory<>("discount"));
         colOperator.setCellValueFactory(new PropertyValueFactory<>("operatorEmail"));
-        colTotal.setCellValueFactory(new PropertyValueFactory<>("totalCost"));
-        colTotal.setCellFactory(column -> new TableCell<OrderTm, Double>() {
-            @Override
-            protected void updateItem(Double item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(String.format("%.2f", item));
+        if (colTotal != null) {
+            colTotal.setCellValueFactory(new PropertyValueFactory<>("totalCost"));
+            colTotal.setCellFactory(column -> new TableCell<OrderTm, Double>() {
+                @Override
+                protected void updateItem(Double item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setText(null);
+                    } else {
+                        setText(String.format("%.2f", item));
+                    }
                 }
-            }
-        });
-        colOrderType.setCellValueFactory(new PropertyValueFactory<>("orderType"));
+            });
+        }
+
         colAction.setCellValueFactory(new PropertyValueFactory<>("viewButton"));
         colReturnOrders.setCellValueFactory(new PropertyValueFactory<>("returnOrdersButton"));
 
-        tblOrders.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblOrders.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 
         loadOrders();
         loadStatistics();
@@ -268,7 +267,6 @@ public class OrderDetailsFormController extends BaseController {
                 tm.setDiscount(order.getDiscount());
                 tm.setOperatorEmail(order.getOperatorEmail());
                 tm.setTotalCost(order.getTotalCost() - totalRefundsForOrder);
-                tm.setOrderType(order.getOrderType() != null ? order.getOrderType() : "HARDWARE");
                 tm.setViewButton(viewBtn);
                 tm.setReturnOrdersButton(returnOrdersBtn);
                 observableList.add(tm);
@@ -285,7 +283,9 @@ public class OrderDetailsFormController extends BaseController {
             });
 
             tblOrders.setItems(observableList);
-            lblRecordCount.setText("Showing " + orders.size() + " order(s)");
+            if (lblRecordCount != null) {
+                lblRecordCount.setText("Showing " + orders.size() + " order(s)");
+            }
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -322,8 +322,10 @@ public class OrderDetailsFormController extends BaseController {
                 totalRefundAmount = returnOrderService.getTotalRefundAmountByDateRange(startDateTime, endDateTime);
 
                 String period = fromDate.format(dateFormatter) + " to " + toDate.format(dateFormatter);
-                lblOrdersPeriod.setText(period);
-                lblRevenuePeriod.setText(period);
+                if (lblOrdersPeriod != null)
+                    lblOrdersPeriod.setText(period);
+                if (lblRevenuePeriod != null)
+                    lblRevenuePeriod.setText(period);
             } else {
                 totalOrders = orderDetailService.getTotalOrderCount();
                 totalRevenue = orderDetailService.getTotalRevenue();
@@ -331,8 +333,10 @@ public class OrderDetailsFormController extends BaseController {
                 totalReturnOrders = (long) returnOrderService.findAllReturnOrders().size();
                 totalRefundAmount = returnOrderService.getTotalRefundAmount();
 
-                lblOrdersPeriod.setText("All Time");
-                lblRevenuePeriod.setText("All Time");
+                if (lblOrdersPeriod != null)
+                    lblOrdersPeriod.setText("All Time");
+                if (lblRevenuePeriod != null)
+                    lblRevenuePeriod.setText("All Time");
             }
 
             LocalDate today = LocalDate.now();
@@ -353,16 +357,21 @@ public class OrderDetailsFormController extends BaseController {
             if (totalReturnOrders != null && totalReturnOrders > 0) {
                 ordersText += " (" + totalReturnOrders + " returns)";
             }
-            lblTotalOrders.setText(ordersText);
-            lblTotalRevenue.setText(String.format("LKR %,.2f", netRevenue));
-            lblAvgOrder.setText(String.format("LKR %,.2f", avgOrder != null ? avgOrder : 0.0));
+            if (lblTotalOrders != null)
+                lblTotalOrders.setText(ordersText);
+            if (lblTotalRevenue != null)
+                lblTotalRevenue.setText(String.format("LKR %,.2f", netRevenue));
+            if (lblAvgOrder != null)
+                lblAvgOrder.setText(String.format("LKR %,.2f", avgOrder != null ? avgOrder : 0.0));
 
             String todayOrdersText = String.valueOf(todayOrders != null ? todayOrders : 0L);
             if (todayReturnOrders != null && todayReturnOrders > 0) {
                 todayOrdersText += " (" + todayReturnOrders + " returns)";
             }
-            lblTodayOrders.setText(todayOrdersText);
-            lblTodayRevenue.setText(String.format("LKR %,.2f", todayNetRevenue));
+            if (lblTodayOrders != null)
+                lblTodayOrders.setText(todayOrdersText);
+            if (lblTodayRevenue != null)
+                lblTodayRevenue.setText(String.format("LKR %,.2f", todayNetRevenue));
 
         } catch (Exception ex) {
             ex.printStackTrace();

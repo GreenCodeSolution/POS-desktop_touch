@@ -146,10 +146,6 @@ public class PlaceOrderFormController extends BaseController {
         }
     }
 
-    private String getCurrentOrderType() {
-        return "HARDWARE";
-    }
-
     @Override
     protected String getCurrentPageName() {
         return "POS - Order Placement";
@@ -336,7 +332,6 @@ public class PlaceOrderFormController extends BaseController {
             orderDetail.setCustomerId(selectedCustomerId);
             orderDetail.setCustomerName(txtName.getText());
             orderDetail.setOperatorEmail(UserSessionData.email);
-            orderDetail.setOrderType(getCurrentOrderType());
             orderDetail.setPaymentMethod(cmbPaymentMethod.getValue());
             orderDetail.setPaymentStatus("PAID");
 

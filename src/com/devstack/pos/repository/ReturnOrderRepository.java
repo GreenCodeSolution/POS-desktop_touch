@@ -58,14 +58,6 @@ public interface ReturnOrderRepository extends JpaRepository<ReturnOrder, Intege
        Long countReturnsByDateRange(@Param("startDate") LocalDateTime startDate,
                      @Param("endDate") LocalDateTime endDate);
 
-       @Query("SELECT SUM(r.refundAmount) FROM ReturnOrder r WHERE r.status = 'COMPLETED' AND r.orderId IN (SELECT o.code FROM OrderDetail o WHERE o.orderType = :orderType)")
-       Double getTotalRefundAmountByOrderType(@Param("orderType") String orderType);
-
-       @Query("SELECT SUM(r.refundAmount) FROM ReturnOrder r WHERE r.status = 'COMPLETED' AND r.orderId IN (SELECT o.code FROM OrderDetail o WHERE o.orderType = :orderType AND o.issuedDate BETWEEN :startDate AND :endDate)")
-       Double getTotalRefundAmountByOrderTypeAndDateRange(@Param("orderType") String orderType,
-                     @Param("startDate") LocalDateTime startDate,
-                     @Param("endDate") LocalDateTime endDate);
-
        @Query("SELECT SUM(r.refundAmount) FROM ReturnOrder r WHERE r.status = 'COMPLETED' AND r.orderId IN (SELECT o.code FROM OrderDetail o WHERE o.customerId = :customerId)")
        Double getTotalRefundAmountByCustomerId(@Param("customerId") Long customerId);
 

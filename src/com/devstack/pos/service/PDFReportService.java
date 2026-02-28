@@ -928,9 +928,6 @@ public class PDFReportService {
             }
 
             receipt.append("------------------------------------------------\n");
-            receipt.append(String.format("Type: %s\n",
-                    "CONSTRUCTION".equals(orderDetail.getOrderType()) ? "Construction" : "Hardware"));
-            receipt.append("------------------------------------------------\n");
 
             double bal = orderDetail.getBalance() != null ? orderDetail.getBalance() : 0.0;
             receipt.append(String.format("%-30s %17.2f\n", "Balance", bal));
@@ -1729,38 +1726,6 @@ public class PDFReportService {
 
         // Customer Purchase History
         addCustomerPurchaseHistorySection(document, customerName, startDate, endDate);
-
-        // Footer
-        addFooter(document);
-
-        document.close();
-        return filePath;
-    }
-
-    /**
-     * Generate construction-specific report PDF
-     */
-    public String generateConstructionReportPDF(LocalDateTime startDate, LocalDateTime endDate)
-            throws IOException {
-        String fileName = "Construction_Report_" + System.currentTimeMillis() + ".pdf";
-        String reportsDir = com.devstack.pos.util.FileStorageUtil.getReportDirectory("Construction");
-        String filePath = com.devstack.pos.util.FileStorageUtil.getFilePath(reportsDir, fileName);
-
-        PdfWriter writer = new PdfWriter(filePath);
-        PdfDocument pdf = new PdfDocument(writer);
-        Document document = new Document(pdf);
-
-        // Header
-        addHeader(document, "Construction Orders Report", startDate, endDate);
-
-        // Construction Summary
-        addConstructionSummarySection(document, startDate, endDate);
-
-        // Construction Sales by Period
-        addConstructionSalesByPeriodSection(document, startDate, endDate);
-
-        // Construction Sales by Cashier
-        addConstructionSalesByCashierSection(document, startDate, endDate);
 
         // Footer
         addFooter(document);
@@ -2797,23 +2762,25 @@ public class PDFReportService {
         document.add(new Paragraph().setMarginBottom(15));
     }
 
-//    private void addSupplierSummarySection(Document document) {
-//        document.add(new Paragraph("SUPPLIER SUMMARY")
-//                .setFontSize(16)
-//                .setBold()
-//                .setMarginTop(10)
-//                .setMarginBottom(10));
-//
-//        int totalSuppliers = supplierService.findAllSuppliers().size();
-//
-//        Table supplierTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-//        supplierTable.setWidth(UnitValue.createPercentValue(100));
-//
-//        addSummaryRow(supplierTable, "Total Suppliers", String.valueOf(totalSuppliers));
-//
-//        document.add(supplierTable);
-//        document.add(new Paragraph().setMarginBottom(15));
-//    }
+    // private void addSupplierSummarySection(Document document) {
+    // document.add(new Paragraph("SUPPLIER SUMMARY")
+    // .setFontSize(16)
+    // .setBold()
+    // .setMarginTop(10)
+    // .setMarginBottom(10));
+    //
+    // int totalSuppliers = supplierService.findAllSuppliers().size();
+    //
+    // Table supplierTable = new Table(UnitValue.createPercentArray(new float[] { 1,
+    // 1 }));
+    // supplierTable.setWidth(UnitValue.createPercentValue(100));
+    //
+    // addSummaryRow(supplierTable, "Total Suppliers",
+    // String.valueOf(totalSuppliers));
+    //
+    // document.add(supplierTable);
+    // document.add(new Paragraph().setMarginBottom(15));
+    // }
 
     private void addPurchaseOrdersSection(Document document) {
         document.add(new Paragraph("PURCHASE ORDERS")
@@ -2928,122 +2895,6 @@ public class PDFReportService {
                 .setTextAlignment(TextAlignment.CENTER)
                 .setItalic();
         document.add(footer);
-    }
-
-    private void addConstructionSummarySection(Document document, LocalDateTime startDate, LocalDateTime endDate) {
-        document.add(new Paragraph("🏗️ CONSTRUCTION ORDERS SUMMARY")
-                .setFontSize(16)
-                .setBold()
-                .setMarginTop(10)
-                .setMarginBottom(10));
-
-        Double revenue = startDate != null && endDate != null
-                ? orderDetailService.getRevenueByOrderTypeAndDateRange("CONSTRUCTION", startDate, endDate)
-                : orderDetailService.getRevenueByOrderType("CONSTRUCTION");
-        Long orders = startDate != null && endDate != null
-                ? orderDetailService.getOrderCountByOrderTypeAndDateRange("CONSTRUCTION", startDate, endDate)
-                : orderDetailService.getOrderCountByOrderType("CONSTRUCTION");
-        double revenueVal = revenue != null ? revenue : 0.0;
-        long ordersVal = orders != null ? orders : 0;
-
-        Table summaryTable = new Table(UnitValue.createPercentArray(new float[] { 2, 2 }));
-        summaryTable.setWidth(UnitValue.createPercentValue(100));
-
-        summaryTable.addHeaderCell(new Cell().add(new Paragraph("Metric").setBold()).setPadding(8));
-        summaryTable.addHeaderCell(new Cell().add(new Paragraph("Value").setBold()).setPadding(8));
-
-        summaryTable.addCell(new Cell().add(new Paragraph("Total Revenue")).setPadding(8));
-        summaryTable.addCell(new Cell().add(new Paragraph(String.format("%.2f /=", revenueVal))).setPadding(8));
-
-        summaryTable.addCell(new Cell().add(new Paragraph("Total Orders")).setPadding(8));
-        summaryTable.addCell(new Cell().add(new Paragraph(String.valueOf(ordersVal))).setPadding(8));
-
-        document.add(summaryTable);
-        document.add(new Paragraph().setMarginBottom(15));
-    }
-
-    private void addConstructionSalesByPeriodSection(Document document, LocalDateTime startDate,
-            LocalDateTime endDate) {
-        document.add(new Paragraph("📅 CONSTRUCTION SALES BY PERIOD")
-                .setFontSize(16)
-                .setBold()
-                .setMarginTop(10)
-                .setMarginBottom(10));
-
-        // Get monthly data for last 12 months
-        LocalDate now = LocalDate.now();
-        Table periodTable = new Table(UnitValue.createPercentArray(new float[] { 3, 2, 2, 2 }));
-        periodTable.setWidth(UnitValue.createPercentValue(100));
-
-        periodTable.addHeaderCell(new Cell().add(new Paragraph("Period").setBold()).setPadding(8));
-        periodTable.addHeaderCell(new Cell().add(new Paragraph("Orders").setBold()).setPadding(8));
-        periodTable.addHeaderCell(new Cell().add(new Paragraph("Revenue").setBold()).setPadding(8));
-
-        for (int i = 11; i >= 0; i--) {
-            LocalDate monthStart = now.minusMonths(i).with(TemporalAdjusters.firstDayOfMonth());
-            LocalDate monthEnd = monthStart.with(TemporalAdjusters.lastDayOfMonth());
-
-            LocalDateTime monthStartDateTime = monthStart.atStartOfDay();
-            LocalDateTime monthEndDateTime = monthEnd.atTime(23, 59, 59);
-
-            Double revenue = orderDetailService.getRevenueByOrderTypeAndDateRange("CONSTRUCTION", monthStartDateTime,
-                    monthEndDateTime);
-            Long orders = orderDetailService.getOrderCountByOrderTypeAndDateRange("CONSTRUCTION", monthStartDateTime,
-                    monthEndDateTime);
-
-            String period = monthStart.format(DateTimeFormatter.ofPattern("MMMM yyyy"));
-
-            periodTable.addCell(new Cell().add(new Paragraph(period)).setPadding(6));
-            periodTable
-                    .addCell(new Cell().add(new Paragraph(String.valueOf(orders != null ? orders : 0))).setPadding(6));
-            periodTable.addCell(new Cell().add(new Paragraph(String.format("%.2f /=", revenue != null ? revenue : 0.0)))
-                    .setPadding(6));
-        }
-
-        document.add(periodTable);
-        document.add(new Paragraph().setMarginBottom(15));
-    }
-
-    private void addConstructionSalesByCashierSection(Document document, LocalDateTime startDate,
-            LocalDateTime endDate) {
-        document.add(new Paragraph("👤 CONSTRUCTION SALES BY CASHIER")
-                .setFontSize(16)
-                .setBold()
-                .setMarginTop(10)
-                .setMarginBottom(10));
-
-        List<Object[]> cashierData = startDate != null && endDate != null
-                ? orderDetailService.getSalesByCashierByOrderTypeAndDateRange("CONSTRUCTION", startDate, endDate)
-                : orderDetailService.getSalesByCashierByOrderType("CONSTRUCTION");
-
-        if (cashierData == null || cashierData.isEmpty()) {
-            document.add(new Paragraph("No construction sales data available.").setFontSize(10));
-            return;
-        }
-
-        Table cashierTable = new Table(UnitValue.createPercentArray(new float[] { 3, 2, 2 }));
-        cashierTable.setWidth(UnitValue.createPercentValue(100));
-
-        cashierTable.addHeaderCell(new Cell().add(new Paragraph("Cashier").setBold()).setPadding(8));
-        cashierTable.addHeaderCell(new Cell().add(new Paragraph("Orders").setBold()).setPadding(8));
-        cashierTable.addHeaderCell(new Cell().add(new Paragraph("Revenue").setBold()).setPadding(8));
-
-        for (Object[] data : cashierData) {
-            String cashierName = (String) data[0];
-            Long orderCount = ((Number) data[1]).longValue();
-            Double revenueAmount = ((Number) data[2]).doubleValue();
-
-            cashierTable.addCell(
-                    new Cell().add(new Paragraph(cashierName != null ? cashierName : "Unknown")).setPadding(6));
-            cashierTable.addCell(
-                    new Cell().add(new Paragraph(String.valueOf(orderCount != null ? orderCount : 0))).setPadding(6));
-            cashierTable.addCell(
-                    new Cell().add(new Paragraph(String.format("%.2f /=", revenueAmount != null ? revenueAmount : 0.0)))
-                            .setPadding(6));
-        }
-
-        document.add(cashierTable);
-        document.add(new Paragraph().setMarginBottom(15));
     }
 
     private void addSalesByCashierSection(Document document, LocalDateTime startDate, LocalDateTime endDate) {
