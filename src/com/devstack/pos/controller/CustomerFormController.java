@@ -22,12 +22,13 @@ public class CustomerFormController extends BaseController {
     public Button btnSaveUpdate;
     public TextField txtSearch;
     public TableView<CustomerTm> tbl;
-    public TableColumn colId;
-    public TableColumn colName;
-    public TableColumn colContact;
-    public TableColumn colTotalSpent;
-    public TableColumn colPendingPayments;
-    public TableColumn colOperate;
+    public TableColumn<CustomerTm, Long> colId;
+    public TableColumn<CustomerTm, String> colName;
+    public TableColumn<CustomerTm, String> colContact;
+    public TableColumn<CustomerTm, Double> colTotalSpent;
+    public TableColumn<CustomerTm, Double> colLoyaltyPoints;
+    public TableColumn<CustomerTm, Double> colPendingPayments;
+    public TableColumn<CustomerTm, Button> colOperate;
 
     private String searchText = "";
     private Long selectedCustomerId = null;
@@ -43,6 +44,7 @@ public class CustomerFormController extends BaseController {
         colName.setCellValueFactory(new PropertyValueFactory<>("name"));
         colContact.setCellValueFactory(new PropertyValueFactory<>("contact"));
         colTotalSpent.setCellValueFactory(new PropertyValueFactory<>("totalSpent"));
+        colLoyaltyPoints.setCellValueFactory(new PropertyValueFactory<>("loyaltyPoints"));
         colPendingPayments.setCellValueFactory(new PropertyValueFactory<>("pendingPayments"));
         colOperate.setCellValueFactory(new PropertyValueFactory<>("deleteButton"));
 
@@ -158,7 +160,8 @@ public class CustomerFormController extends BaseController {
 
             Button btn = new Button("Delete");
             CustomerTm tm = new CustomerTm(
-                    customer.getId(), customer.getName(), customer.getContact(), totalSpent, pendingPayments, btn);
+                    customer.getId(), customer.getName(), customer.getContact(), totalSpent, pendingPayments,
+                    customer.getLoyaltyPoints(), btn);
             observableList.add(tm);
 
             btn.setOnAction((e) -> {
@@ -278,8 +281,11 @@ public class CustomerFormController extends BaseController {
                 }
             } else {
                 if (selectedCustomerId != null) {
+                    Customer existingCustomer = customerService.findCustomer(selectedCustomerId);
+                    double existingLoyaltyPoints = existingCustomer != null ? existingCustomer.getLoyaltyPoints() : 0.0;
                     Customer customer = new Customer(selectedCustomerId, txtName.getText().trim(),
                             txtContact.getText().trim());
+                    customer.setLoyaltyPoints(existingLoyaltyPoints);
                     if (customerService.updateCustomer(customer)) {
                         new Alert(Alert.AlertType.INFORMATION, "Customer Updated Successfully!").show();
                         clearFields();

@@ -21,9 +21,6 @@ public class LoyaltyCard {
     @Column(name = "card_type", nullable = false)
     private CardType cardType;
     
-    @Column(name = "barcode", length = 200)
-    private String barcode;
-    
     @Column(name = "email", length = 100)
     private String email;
 }

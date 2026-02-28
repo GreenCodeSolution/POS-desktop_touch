@@ -54,6 +54,9 @@ public class SystemSettings {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
+    @Column(name = "loyalty_points_rate")
+    private Double loyaltyPointsRate = 100.0;
+
     public SystemSettings(String businessName, String address, String contactNumber,
             String email, String taxNumber, String footerMessage) {
         this.businessName = businessName;
@@ -65,5 +68,6 @@ public class SystemSettings {
         this.trialEnabled = false;
         this.trialEndDate = null;
         this.isActive = true;
+        this.loyaltyPointsRate = 100.0;
     }
 }

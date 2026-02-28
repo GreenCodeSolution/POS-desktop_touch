@@ -48,6 +48,26 @@
                             <Font name="System" size="13.0"/>
                         </font>
                     </JFXTextField>
+                    
+                    <Region HBox.hgrow="ALWAYS" />
+                    
+                    <!-- Loyalty Points -->
+                    <HBox spacing="8" alignment="CENTER_LEFT">
+                        <VBox spacing="2">
+                            <Text text="Loyalty Pts:" style="-fx-font-size: 13px; -fx-fill: #334155; -fx-font-weight: bold;">
+                                <font>
+                                    <Font name="System Bold" size="13.0"/>
+                                </font>
+                            </Text>
+                            <Text fx:id="txtCustomerLoyaltyPoints" text="Aval: 0" style="-fx-font-size: 11px; -fx-fill: #64748b;"/>
+                        </VBox>
+                        <JFXTextField fx:id="txtPointsToUse" promptText="Use Pts" styleClass="text-field-modern"
+                                      prefWidth="90.0" prefHeight="36.0" onKeyReleased="#calculateBalance" style="-fx-font-size: 13px;">
+                            <font>
+                                <Font name="System" size="13.0"/>
+                            </font>
+                        </JFXTextField>
+                    </HBox>
                 </HBox>
 
                 <!-- Product Details Section -->

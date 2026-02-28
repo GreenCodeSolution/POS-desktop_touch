@@ -16,5 +16,6 @@ public class CustomerTm {
     private String contact;
     private double totalSpent;
     private double pendingPayments;
+    private double loyaltyPoints;
     private Button deleteButton;
 }

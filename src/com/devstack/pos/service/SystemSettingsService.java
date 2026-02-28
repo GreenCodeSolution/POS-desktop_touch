@@ -30,12 +30,10 @@ public class SystemSettingsService {
                 });
     }
 
-
     private final java.util.List<Runnable> listeners = new java.util.ArrayList<>();
 
     public void addSettingsUpdateListener(Runnable listener) {
         listeners.add(listener);
     }
-
 
 }

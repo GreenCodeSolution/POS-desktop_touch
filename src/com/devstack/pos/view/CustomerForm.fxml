@@ -117,6 +117,7 @@
                   <TableColumn fx:id="colName" prefWidth="250.0" text="Customer Name" sortable="false" />
                   <TableColumn fx:id="colContact" prefWidth="180.0" text="Contact Number" sortable="false" />
                   <TableColumn fx:id="colTotalSpent" prefWidth="180.0" text="Total Spent" sortable="false" />
+                  <TableColumn fx:id="colLoyaltyPoints" prefWidth="150.0" text="Loyalty Points" sortable="false" />
                   <TableColumn fx:id="colPendingPayments" prefWidth="180.0" text="Pending Payments" sortable="false" />
                   <TableColumn fx:id="colOperate" prefWidth="150.0" text="Actions" sortable="false" />
                </columns>

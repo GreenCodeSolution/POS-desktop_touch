@@ -48,6 +48,12 @@ public class OrderDetail {
     @Column(name = "balance")
     private Double balance;
 
+    @Column(name = "loyalty_points_used")
+    private double loyaltyPointsUsed = 0.0;
+
+    @Column(name = "loyalty_points_earned")
+    private double loyaltyPointsEarned = 0.0;
+
     // Note: We use customerId instead of @ManyToOne relationship to avoid lazy
     // loading issues
     // and to support guest orders (where customerId can be null)

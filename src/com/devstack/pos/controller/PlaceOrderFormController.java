@@ -53,8 +53,11 @@ public class PlaceOrderFormController extends BaseController {
     public JFXTextField txtCustomerPaid;
     public JFXButton btnPrint;
     public JFXComboBox<String> cmbPaymentMethod;
+    public Text txtCustomerLoyaltyPoints;
+    public JFXTextField txtPointsToUse;
 
     private Long selectedCustomerId = null;
+    private double availableLoyaltyPoints = 0.0;
     private String lastCompletedReceiptPath = null; // Store receipt path for printing
     private final CustomerService customerService;
     private final ProductDetailService productDetailService;
@@ -63,6 +66,7 @@ public class PlaceOrderFormController extends BaseController {
     private final OrderItemService orderItemService;
     private final PDFReportService pdfReportService;
     private final ReceiptPrinter receiptPrinter;
+    private final SystemSettingsService systemSettingsService;
     private boolean isUpdatingBarcodeProgrammatically = false;
 
     private double currentShowPrice = 0.0;
@@ -179,11 +183,15 @@ public class PlaceOrderFormController extends BaseController {
             if (customer != null) {
                 selectedCustomerId = customer.getId();
                 txtName.setText(customer.getName());
+                availableLoyaltyPoints = customer.getLoyaltyPoints();
+                txtCustomerLoyaltyPoints.setText(String.format("Aval: %.1f", availableLoyaltyPoints));
                 txtBarcode.requestFocus();
             } else {
                 new Alert(Alert.AlertType.WARNING, "Customer not found (Press Enter to search again or Add New)")
                         .show();
                 selectedCustomerId = null;
+                availableLoyaltyPoints = 0.0;
+                txtCustomerLoyaltyPoints.setText("Aval: 0");
                 txtName.clear();
             }
         } catch (Exception e) {
@@ -311,8 +319,20 @@ public class PlaceOrderFormController extends BaseController {
             double total = 0;
             for (CartTm tm : tms)
                 total += tm.getTotalCost();
+            double pointsToUse = txtPointsToUse.getText().isEmpty() ? 0.0
+                    : Double.parseDouble(txtPointsToUse.getText());
+            if (pointsToUse > availableLoyaltyPoints) {
+                pointsToUse = availableLoyaltyPoints;
+                txtPointsToUse.setText(String.valueOf(pointsToUse));
+            }
+            double finalTotal = total - pointsToUse;
+            if (finalTotal < 0) {
+                finalTotal = 0;
+            }
+            txtTotal.setText(String.format("%.2f /=", finalTotal));
+
             double paid = txtCustomerPaid.getText().isEmpty() ? 0.0 : Double.parseDouble(txtCustomerPaid.getText());
-            txtBalance.setText(String.format("%.2f /=", (paid - total)));
+            txtBalance.setText(String.format("%.2f /=", (paid - finalTotal)));
         } catch (Exception e) {
             txtBalance.setText("Error");
         }
@@ -325,21 +345,51 @@ public class PlaceOrderFormController extends BaseController {
         }
 
         try {
+            double totalCost = tms.stream().mapToDouble(CartTm::getTotalCost).sum();
+            double pointsToUse = txtPointsToUse.getText().isEmpty() ? 0.0
+                    : Double.parseDouble(txtPointsToUse.getText());
+            double finalTotal = totalCost - pointsToUse;
+
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setIssuedDate(LocalDateTime.now());
-            orderDetail.setTotalCost(tms.stream().mapToDouble(CartTm::getTotalCost).sum());
+            orderDetail.setTotalCost(finalTotal);
             orderDetail.setCustomerId(selectedCustomerId);
             orderDetail.setCustomerName(txtName.getText());
             orderDetail.setOperatorEmail(UserSessionData.email);
             orderDetail.setPaymentMethod(cmbPaymentMethod.getValue());
             orderDetail.setPaymentStatus("PAID");
+            orderDetail.setLoyaltyPointsUsed(pointsToUse);
+
+            // Earn points based on configurable rate from admin side
+            double rate = 100.0; // Default: 1 point per 100
+            try {
+                SystemSettings settings = systemSettingsService.getSystemSettings();
+                if (settings != null && settings.getLoyaltyPointsRate() != null
+                        && settings.getLoyaltyPointsRate() > 0) {
+                    rate = settings.getLoyaltyPointsRate();
+                }
+            } catch (Exception e) {
+                // Keep default
+            }
+            double pointsEarned = finalTotal / rate;
+            orderDetail.setLoyaltyPointsEarned(pointsEarned);
 
             double totalPaid = txtCustomerPaid.getText().isEmpty() ? 0.0
                     : Double.parseDouble(txtCustomerPaid.getText());
             orderDetail.setCustomerPaid(totalPaid);
-            orderDetail.setBalance(totalPaid - orderDetail.getTotalCost());
+            orderDetail.setBalance(totalPaid - finalTotal);
 
             OrderDetail savedOrder = orderDetailService.saveOrderDetail(orderDetail);
+
+            // Update customer loyalty points if customer is selected
+            if (selectedCustomerId != null) {
+                Customer customer = customerService.findCustomer(selectedCustomerId);
+                if (customer != null) {
+                    double newPoints = customer.getLoyaltyPoints() - pointsToUse + pointsEarned;
+                    customer.setLoyaltyPoints(newPoints);
+                    customerService.updateCustomer(customer);
+                }
+            }
 
             List<OrderItem> orderItems = new ArrayList<>();
             for (CartTm tm : tms) {
@@ -405,6 +455,9 @@ public class PlaceOrderFormController extends BaseController {
         txtTotal.setText("0.00 /=");
         currentShowPrice = 0.0;
         selectedCustomerId = null;
+        availableLoyaltyPoints = 0.0;
+        txtPointsToUse.clear();
+        txtCustomerLoyaltyPoints.setText("Aval: 0");
     }
 
 }
