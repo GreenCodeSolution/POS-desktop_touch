@@ -1,0 +1,427 @@
+package com.devstack.pos.controller;
+
+import com.devstack.pos.entity.*;
+import com.devstack.pos.service.*;
+import com.devstack.pos.util.AuthorizationUtil;
+import com.devstack.pos.util.ReceiptPrinter;
+import com.devstack.pos.util.UserSessionData;
+import com.devstack.pos.view.tm.CartTm;
+import com.jfoenix.controls.JFXButton;
+import com.jfoenix.controls.JFXComboBox;
+import com.jfoenix.controls.JFXTextField;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Text;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Component
+@RequiredArgsConstructor
+public class PlaceOrderFormController extends BaseController {
+    public TextField txtContact;
+    public TextField txtName;
+    public TextField txtBarcode;
+    public TextField txtDescription;
+    public TextField txtSellingPrice;
+    public TextField txtDiscount;
+    public TextField txtQtyOnHand;
+    public TextField txtQty;
+    public TableView<CartTm> tblCart;
+    public TableColumn<CartTm, String> colCode;
+    public TableColumn<CartTm, String> colDesc;
+    public TableColumn<CartTm, Double> colSelPrice;
+    public TableColumn<CartTm, Double> colSelDisc;
+    public TableColumn<CartTm, Double> colSelQty;
+    public TableColumn<CartTm, Double> colSelTotal;
+    public TableColumn<CartTm, Button> colSelOperation;
+    public Text txtTotal;
+    public Text txtBalance;
+    public JFXTextField txtCustomerPaid;
+    public JFXButton btnPrint;
+    public JFXComboBox<String> cmbPaymentMethod;
+
+    private Long selectedCustomerId = null;
+    private String lastCompletedReceiptPath = null; // Store receipt path for printing
+    private final CustomerService customerService;
+    private final ProductDetailService productDetailService;
+    private final ProductService productService;
+    private final OrderDetailService orderDetailService;
+    private final OrderItemService orderItemService;
+    private final PDFReportService pdfReportService;
+    private final ReceiptPrinter receiptPrinter;
+    private boolean isUpdatingBarcodeProgrammatically = false;
+
+    private double currentShowPrice = 0.0;
+
+    public void initialize() {
+        if (tms != null) {
+            tms.clear();
+        }
+        selectedCustomerId = null;
+        lastCompletedReceiptPath = null;
+
+        initializeSidebar();
+
+        javafx.application.Platform.runLater(() -> {
+            if (context != null && context.getScene() != null) {
+                context.getScene().addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, event -> {
+                    if (event.getCode() == javafx.scene.input.KeyCode.ESCAPE) {
+                        clear();
+                        event.consume();
+                    }
+                });
+            }
+        });
+
+        if (!AuthorizationUtil.canAccessPOSOrders()) {
+            AuthorizationUtil.showUnauthorizedAlert();
+            btnHomeOnAction(null);
+            return;
+        }
+
+        tblCart.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
+        colCode.setCellValueFactory(new PropertyValueFactory<>("code"));
+        colDesc.setCellValueFactory(new PropertyValueFactory<>("description"));
+        colSelPrice.setCellValueFactory(new PropertyValueFactory<>("sellingPrice"));
+        colSelDisc.setCellValueFactory(new PropertyValueFactory<>("discount"));
+        colSelQty.setCellValueFactory(new PropertyValueFactory<>("qty"));
+        colSelQty.setCellFactory(column -> new TableCell<CartTm, Double>() {
+            @Override
+            protected void updateItem(Double qty, boolean empty) {
+                super.updateItem(qty, empty);
+                if (empty || qty == null)
+                    setText(null);
+                else
+                    setText(qty == qty.intValue() ? String.valueOf(qty.intValue()) : String.format("%.2f", qty));
+            }
+        });
+        colSelTotal.setCellValueFactory(new PropertyValueFactory<>("totalCost"));
+        colSelTotal.setCellFactory(column -> new TableCell<CartTm, Double>() {
+            @Override
+            protected void updateItem(Double total, boolean empty) {
+                super.updateItem(total, empty);
+                if (empty || total == null)
+                    setText(null);
+                else
+                    setText(String.format("%.2f", total));
+            }
+        });
+        colSelOperation.setCellValueFactory(new PropertyValueFactory<>("btn"));
+
+        cmbPaymentMethod.setItems(FXCollections.observableArrayList("CASH", "CARD", "CHEQUE", "CREDIT"));
+        cmbPaymentMethod.setValue("CASH");
+
+        setupBarcodeScannerDetection();
+        setupQuantityInputValidation();
+    }
+
+    private void setupQuantityInputValidation() {
+        txtQty.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d*(\\.\\d*)?")) {
+                txtQty.setText(oldValue);
+            }
+        });
+    }
+
+    @FXML
+    public void handleDiscountKeyPress(javafx.scene.input.KeyEvent event) {
+        if (event.getCode() == javafx.scene.input.KeyCode.ENTER) {
+            txtQty.requestFocus();
+        }
+    }
+
+    private String getCurrentOrderType() {
+        return "HARDWARE";
+    }
+
+    @Override
+    protected String getCurrentPageName() {
+        return "POS - Order Placement";
+    }
+
+    public void btnBackToHomeOnAction(ActionEvent actionEvent) {
+        btnHomeOnAction(actionEvent);
+    }
+
+    public void btnAddNewCustomerOnAction(ActionEvent actionEvent) throws IOException {
+        setUi("CustomerForm", false);
+    }
+
+    public void btnAddNewProductOnAction(ActionEvent actionEvent) throws IOException {
+        setUi("ProductMainForm", false);
+    }
+
+    private void setUi(String url, boolean state) throws IOException {
+        Stage stage = new Stage();
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/devstack/pos/view/" + url + ".fxml"));
+        loader.setControllerFactory(com.devstack.pos.PosApplication.getApplicationContext()::getBean);
+        stage.setScene(new Scene(loader.load()));
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle(url);
+        stage.centerOnScreen();
+        stage.show();
+    }
+
+    public void searchCustomer(ActionEvent actionEvent) {
+        try {
+            Customer customer = customerService.findByContact(txtContact.getText().trim());
+            if (customer != null) {
+                selectedCustomerId = customer.getId();
+                txtName.setText(customer.getName());
+                txtBarcode.requestFocus();
+            } else {
+                new Alert(Alert.AlertType.WARNING, "Customer not found (Press Enter to search again or Add New)")
+                        .show();
+                selectedCustomerId = null;
+                txtName.clear();
+            }
+        } catch (Exception e) {
+            new Alert(Alert.AlertType.ERROR, "Search Error: " + e.getMessage()).show();
+        }
+    }
+
+    private void setupBarcodeScannerDetection() {
+        txtBarcode.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (isUpdatingBarcodeProgrammatically)
+                return;
+            if (newValue != null && (newValue.length() >= 13 || newValue.length() == 8)) {
+                loadProduct(null);
+            }
+        });
+    }
+
+    public void loadProduct(ActionEvent actionEvent) {
+        String barcode = txtBarcode.getText().trim();
+        if (barcode.isEmpty())
+            return;
+        try {
+            ProductDetail productDetail = productDetailService.findProductDetailByCode(barcode);
+            if (productDetail != null) {
+                Product product = productService.findProduct(productDetail.getProductCode());
+                txtDescription.setText(product != null ? product.getDescription() : "N/A");
+                txtSellingPrice.setText(String.valueOf(productDetail.getSellingPrice()));
+                txtQtyOnHand.setText(String.valueOf(productDetail.getQtyOnHand()));
+                txtDiscount.setText("0.0");
+                currentShowPrice = productDetail.getShowPrice();
+                txtQty.requestFocus();
+            } else {
+                // Try searching by description/barcode in Product table
+                // This is a bit complex as we need a batch (ProductDetail) to sell
+                // For now, let's just use the barcode scanner primarily
+            }
+        } catch (Exception e) {
+            new Alert(Alert.AlertType.ERROR, "Load error: " + e.getMessage()).show();
+        }
+    }
+
+    private final ObservableList<CartTm> tms = FXCollections.observableArrayList();
+
+    public void addToCart(ActionEvent actionEvent) {
+        try {
+            double qty = Double.parseDouble(txtQty.getText());
+            double sellingPrice = Double.parseDouble(txtSellingPrice.getText());
+            double qtyOnHand = Double.parseDouble(txtQtyOnHand.getText());
+            double discount = txtDiscount.getText().isEmpty() ? 0.0 : Double.parseDouble(txtDiscount.getText());
+
+            if (qtyOnHand < qty) {
+                new Alert(Alert.AlertType.WARNING, "Lower info").show();
+                return;
+            }
+
+            addToCartInternal(txtBarcode.getText(), txtDescription.getText(), sellingPrice, qty, discount,
+                    currentShowPrice);
+        } catch (Exception e) {
+            new Alert(Alert.AlertType.ERROR, "Number format error").show();
+        }
+    }
+
+    private void addToCartInternal(String barcode, String description, double sellingPrice, double qty, double discount,
+            double showPrice) {
+        int n = isExists(barcode);
+        if (n == -1) {
+            Button btn = new Button("Remove");
+            CartTm tm = new CartTm(barcode, description, discount, sellingPrice, showPrice, qty,
+                    (sellingPrice - discount) * qty, btn);
+            btn.setOnAction(e -> {
+                tms.remove(tm);
+                setTotal();
+            });
+            tms.add(tm);
+        } else {
+            CartTm tm = tms.get(n);
+            double newQuantity = tm.getQty() + qty;
+            tm.setQty(newQuantity);
+            tm.setTotalCost((tm.getSellingPrice() - tm.getDiscount()) * newQuantity);
+        }
+        tblCart.setItems(tms);
+        tblCart.refresh();
+        setTotal();
+        clear();
+        txtBarcode.requestFocus();
+    }
+
+    public void btnClearOnAction(ActionEvent actionEvent) {
+        clear();
+    }
+
+    private void clear() {
+        txtBarcode.clear();
+        txtDescription.clear();
+        txtSellingPrice.clear();
+        txtQtyOnHand.clear();
+        txtQty.clear();
+        txtDiscount.clear();
+        currentShowPrice = 0.0;
+        txtBarcode.requestFocus();
+    }
+
+    private int isExists(String code) {
+        for (int i = 0; i < tms.size(); i++) {
+            if (tms.get(i).getCode().equals(code))
+                return i;
+        }
+        return -1;
+    }
+
+    private void setTotal() {
+        double total = 0;
+        for (CartTm tm : tms)
+            total += tm.getTotalCost();
+        txtTotal.setText(String.format("%.2f /=", total));
+        calculateBalance();
+    }
+
+    public void calculateBalance(javafx.scene.input.KeyEvent keyEvent) {
+        calculateBalance();
+    }
+
+    private void calculateBalance() {
+        try {
+            double total = 0;
+            for (CartTm tm : tms)
+                total += tm.getTotalCost();
+            double paid = txtCustomerPaid.getText().isEmpty() ? 0.0 : Double.parseDouble(txtCustomerPaid.getText());
+            txtBalance.setText(String.format("%.2f /=", (paid - total)));
+        } catch (Exception e) {
+            txtBalance.setText("Error");
+        }
+    }
+
+    public void btnCompleteOrder(ActionEvent actionEvent) {
+        if (tms.isEmpty()) {
+            new Alert(Alert.AlertType.WARNING, "Cart is empty").show();
+            return;
+        }
+
+        try {
+            OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setIssuedDate(LocalDateTime.now());
+            orderDetail.setTotalCost(tms.stream().mapToDouble(CartTm::getTotalCost).sum());
+            orderDetail.setCustomerId(selectedCustomerId);
+            orderDetail.setCustomerName(txtName.getText());
+            orderDetail.setOperatorEmail(UserSessionData.email);
+            orderDetail.setOrderType(getCurrentOrderType());
+            orderDetail.setPaymentMethod(cmbPaymentMethod.getValue());
+            orderDetail.setPaymentStatus("PAID");
+
+            double totalPaid = txtCustomerPaid.getText().isEmpty() ? 0.0
+                    : Double.parseDouble(txtCustomerPaid.getText());
+            orderDetail.setCustomerPaid(totalPaid);
+            orderDetail.setBalance(totalPaid - orderDetail.getTotalCost());
+
+            OrderDetail savedOrder = orderDetailService.saveOrderDetail(orderDetail);
+
+            List<OrderItem> orderItems = new ArrayList<>();
+            for (CartTm tm : tms) {
+                ProductDetail productDetail = productDetailService.findProductDetailByCode(tm.getCode());
+                OrderItem orderItem = OrderItem.builder()
+                        .orderId(savedOrder.getCode())
+                        .productCode(productDetail != null ? productDetail.getProductCode() : 0)
+                        .productName(tm.getDescription())
+                        .batchCode(tm.getCode())
+                        .batchNumber(productDetail != null ? productDetail.getBatchNumber() : null)
+                        .quantity(tm.getQty())
+                        .unitPrice(tm.getSellingPrice())
+                        .discountPerUnit(tm.getDiscount())
+                        .totalDiscount(tm.getDiscount() * tm.getQty())
+                        .lineTotal(tm.getTotalCost())
+                        .build();
+                orderItems.add(orderItem);
+            }
+            orderItemService.saveAllOrderItems(orderItems);
+
+            for (CartTm tm : tms) {
+                productDetailService.reduceStock(tm.getCode(), tm.getQty());
+            }
+
+            lastCompletedReceiptPath = pdfReportService.generateBillReceipt(savedOrder.getCode());
+            new Alert(Alert.AlertType.CONFIRMATION, "Order Completed!\nPDF: " + lastCompletedReceiptPath).show();
+
+            btnPrint.setDisable(false);
+            javafx.application.Platform.runLater(() -> {
+                clearFields();
+                tms.clear();
+                tblCart.setItems(tms);
+                setTotal();
+            });
+        } catch (Exception e) {
+            new Alert(Alert.AlertType.ERROR, "Error: " + e.getMessage()).show();
+        }
+    }
+
+    public void btnPrintReceipt(ActionEvent actionEvent) {
+        try {
+            if (lastCompletedReceiptPath == null) {
+                new Alert(Alert.AlertType.WARNING, "No order to print.").show();
+                return;
+            }
+            receiptPrinter.printBill(lastCompletedReceiptPath);
+        } catch (Exception e) {
+            new Alert(Alert.AlertType.ERROR, "Print error: " + e.getMessage()).show();
+        }
+    }
+
+    private void clearFields() {
+        txtContact.clear();
+        txtName.clear();
+        txtBarcode.clear();
+        txtDescription.clear();
+        txtSellingPrice.clear();
+        txtQtyOnHand.clear();
+        txtQty.clear();
+        txtDiscount.clear();
+        txtCustomerPaid.clear();
+        txtBalance.setText("0.00 /=");
+        txtTotal.setText("0.00 /=");
+        currentShowPrice = 0.0;
+        selectedCustomerId = null;
+    }
+
+    public void btnLogoutOnAction(ActionEvent actionEvent) {
+        try {
+            Stage stage = (Stage) context.getScene().getWindow();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/devstack/pos/view/LoginForm.fxml"));
+            loader.setControllerFactory(com.devstack.pos.PosApplication.getApplicationContext()::getBean);
+            stage.getScene().setRoot(loader.load());
+            UserSessionData.clear();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}

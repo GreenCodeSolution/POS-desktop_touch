@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+
+<AnchorPane fx:id="context" xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.devstack.pos.controller.HelpPageController"
+            stylesheets="@styles/modern-dashboard.css"
+            style="-fx-background-color: transparent;">
+    
+    <!-- MAIN CONTENT -->
+    <VBox spacing="32" AnchorPane.leftAnchor="50" AnchorPane.rightAnchor="50"
+          AnchorPane.topAnchor="30" AnchorPane.bottomAnchor="30">
+        <children>
+            <!-- Scrollable Content -->
+            <ScrollPane VBox.vgrow="ALWAYS" fitToWidth="true" 
+                        style="-fx-background: transparent; -fx-background-color: transparent;"
+                        styleClass="custom-scroll-pane">
+                <VBox spacing="25" style="-fx-padding: 0 20 0 0;">
+                
+                <!-- New Updates Section -->
+                <VBox spacing="15" styleClass="card-modern" style="-fx-background-color: #f8fafc; -fx-border-color: #3b82f6; -fx-border-width: 1; -fx-background-radius: 8; -fx-border-radius: 8; -fx-padding: 20;">
+                    <Text text="✨ New Updates - v2.1.0" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #1e3a8a;"/>
+                    <Separator style="-fx-background-color: #bfdbfe;"/>
+                    
+                    <VBox spacing="12">
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Text text="🆕" style="-fx-font-size: 16px;"/>
+                            <VBox spacing="2">
+                                <Text text="Optimized Sidebar Layout" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                                <Text text="Reduced sidebar width for more workspace and improved content visibility." style="-fx-fill: #64748b; -fx-font-size: 13px;"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Text text="🎨" style="-fx-font-size: 16px;"/>
+                            <VBox spacing="2">
+                                <Text text="Dynamic Navigation Highlighting" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                                <Text text="The sidebar now clearly highlights the section you are currently viewing." style="-fx-fill: #64748b; -fx-font-size: 13px;"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Text text="🛠️" style="-fx-font-size: 16px;"/>
+                            <VBox spacing="2">
+                                <Text text="Structural Fixes" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                                <Text text="Fixed layout issues where content was being hidden behind the sidebar." style="-fx-fill: #64748b; -fx-font-size: 13px;"/>
+                            </VBox>
+                        </HBox>
+                        
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <Text text="🧹" style="-fx-font-size: 16px;"/>
+                            <VBox spacing="2">
+                                <Text text="Simplified Interface" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                                <Text text="Removed redundant About section to streamline the navigation." style="-fx-fill: #64748b; -fx-font-size: 13px;"/>
+                            </VBox>
+                        </HBox>
+                    </VBox>
+                </VBox>
+                
+                <!-- Customer Management -->
+                <VBox spacing="15" styleClass="card-modern">
+                    <Text text="👥 Customer Management" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                    <Separator style="-fx-background-color: #e2e8f0;"/>
+                    <Text text="Available to all users (Cashiers and Admins)" style="-fx-font-size: 12px; -fx-fill: #10b981; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
+                    
+                    <VBox spacing="10">
+                        <Text text="Adding a New Customer:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="1. Navigate to 'Customers' from the sidebar" style="-fx-fill: #64748b;"/>
+                        <Text text="2. Click 'New Customer' button" style="-fx-fill: #64748b;"/>
+                        <Text text="3. Fill in customer details (Email, Name, Contact, Salary)" style="-fx-fill: #64748b;"/>
+                        <Text text="4. Click 'Save Customer' to add the customer" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                    
+                    <VBox spacing="10">
+                        <Text text="Searching Customers:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="• Use the search box to find customers by name or email" style="-fx-fill: #64748b;"/>
+                        <Text text="• Click on a customer row to view/edit their details" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                </VBox>
+                
+                <!-- Product Management -->
+                <VBox spacing="15" styleClass="card-modern">
+                    <Text text="📦 Product Management (Admin Only)" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                    <Separator style="-fx-background-color: #e2e8f0;"/>
+                    
+                    <VBox spacing="10">
+                        <Text text="Adding Products:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="1. Navigate to 'Products' from the sidebar" style="-fx-fill: #64748b;"/>
+                        <Text text="2. Enter product description" style="-fx-fill: #64748b;"/>
+                        <Text text="3. Click 'Save Product'" style="-fx-fill: #64748b;"/>
+                        <Text text="4. Select the product and click 'New Batch' to add inventory" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                    
+                    <VBox spacing="10">
+                        <Text text="Managing Batches:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="• Each product can have multiple batches with different prices" style="-fx-fill: #64748b;"/>
+                        <Text text="• Enter quantity, buying price, selling price, and discount details" style="-fx-fill: #64748b;"/>
+                        <Text text="• Use barcode scanning for quick product lookup" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                </VBox>
+                
+                <!-- Place Order -->
+                <VBox spacing="15" styleClass="card-modern">
+                    <Text text="🛒 Place Order (POS)" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                    <Separator style="-fx-background-color: #e2e8f0;"/>
+                    <Text text="Available to all users (Cashiers and Admins)" style="-fx-font-size: 12px; -fx-fill: #10b981; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
+                    
+                    <VBox spacing="10">
+                        <Text text="Creating an Order:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="1. Navigate to 'POS / Orders' from the sidebar" style="-fx-fill: #64748b;"/>
+                        <Text text="2. Select or add a customer" style="-fx-fill: #64748b;"/>
+                        <Text text="3. Scan or enter product barcode" style="-fx-fill: #64748b;"/>
+                        <Text text="4. Enter quantity and click 'Add to Cart'" style="-fx-fill: #64748b;"/>
+                        <Text text="5. Review cart items and total" style="-fx-fill: #64748b;"/>
+                        <Text text="6. Click 'Print Bill' to complete the order" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                    
+                    <VBox spacing="10">
+                        <Text text="Tips:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="• Discounts are automatically applied if available" style="-fx-fill: #64748b;"/>
+                        <Text text="• You can remove items from cart before finalizing" style="-fx-fill: #64748b;"/>
+                        <Text text="• Orders are automatically saved to the database" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                </VBox>
+                
+                <!-- Returns -->
+                <VBox spacing="15" styleClass="card-modern">
+                    <Text text="🔄 Return Orders" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                    <Separator style="-fx-background-color: #e2e8f0;"/>
+                    <Text text="Available to all users (Cashiers and Admins)" style="-fx-font-size: 12px; -fx-fill: #10b981; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
+                    
+                    <VBox spacing="10">
+                        <Text text="Processing Returns:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="1. Navigate to 'Return Orders' from the sidebar" style="-fx-fill: #64748b;"/>
+                        <Text text="2. Click 'Process New Return' button" style="-fx-fill: #64748b;"/>
+                        <Text text="3. Enter the Order ID to retrieve order details" style="-fx-fill: #64748b;"/>
+                        <Text text="4. Review order items and select items to return" style="-fx-fill: #64748b;"/>
+                        <Text text="5. Enter return reason and refund amount" style="-fx-fill: #64748b;"/>
+                        <Text text="6. Click 'Process Return' to complete the return" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                    
+                    <VBox spacing="10">
+                        <Text text="Viewing Returns:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="• View all processed returns in the returns table" style="-fx-fill: #64748b;"/>
+                        <Text text="• Filter returns by status: Pending, Completed, Rejected" style="-fx-fill: #64748b;"/>
+                        <Text text="• Search returns by order ID or customer name" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                </VBox>
+                
+                <!-- All Orders -->
+                <VBox spacing="15" styleClass="card-modern">
+                    <Text text="📋 All Orders" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                    <Separator style="-fx-background-color: #e2e8f0;"/>
+                    <Text text="Available to all users (Cashiers and Admins)" style="-fx-font-size: 12px; -fx-fill: #10b981; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
+                    
+                    <VBox spacing="10">
+                        <Text text="Viewing Orders:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="• View all orders placed in the system" style="-fx-fill: #64748b;"/>
+                        <Text text="• Search orders by customer name or order ID" style="-fx-fill: #64748b;"/>
+                        <Text text="• Filter orders by date range" style="-fx-fill: #64748b;"/>
+                        <Text text="• View detailed order information including items and totals" style="-fx-fill: #64748b;"/>
+                        <Text text="• Process returns for existing orders" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                </VBox>
+                
+                <!-- Purchase Orders -->
+                <VBox spacing="15" styleClass="card-modern">
+                    <Text text="💰 Supplier Management (Admin Only)" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                    <Separator style="-fx-background-color: #e2e8f0;"/>
+                    <Text text="Admin access required" style="-fx-font-size: 12px; -fx-fill: #ef4444; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
+                    
+                    <VBox spacing="10">
+                        <Text text="Managing Suppliers:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="• View all suppliers and their contact information" style="-fx-fill: #64748b;"/>
+                        <Text text="• Add new suppliers to the system" style="-fx-fill: #64748b;"/>
+                        <Text text="• Manage supplier details and relationships" style="-fx-fill: #64748b;"/>
+                        <Text text="• Track supplier performance and orders" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                </VBox>
+                
+                <!-- Reports -->
+                <VBox spacing="15" styleClass="card-modern">
+                    <Text text="📊 Reports &amp; Analytics (Admin Only)" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                    <Separator style="-fx-background-color: #e2e8f0;"/>
+                    <Text text="Admin access required" style="-fx-font-size: 12px; -fx-fill: #ef4444; -fx-font-weight: bold; -fx-padding: 0 0 10 0;"/>
+                    
+                    <VBox spacing="10">
+                        <Text text="Available Reports:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="• Sales Reports - Weekly/yearly sales analysis" style="-fx-fill: #64748b;"/>
+                        <Text text="• Top Products - Best selling items by quantity and revenue" style="-fx-fill: #64748b;"/>
+                        <Text text="• Sales by Category - Category-wise performance" style="-fx-fill: #64748b;"/>
+                        <Text text="• Cashier Performance - Sales by individual cashiers" style="-fx-fill: #64748b;"/>
+                        <Text text="• Profit &amp; Loss - Revenue, costs, and profit analysis" style="-fx-fill: #64748b;"/>
+                        <Text text="• Tax Summary - Tax calculations and reporting" style="-fx-fill: #64748b;"/>
+                        <Text text="• Customer Reports - Top customers by orders and spending" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                    
+                    <VBox spacing="10">
+                        <Text text="Using Reports:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="• Select date range to filter data" style="-fx-fill: #64748b;"/>
+                        <Text text="• Click 'Apply Filter' to update reports" style="-fx-fill: #64748b;"/>
+                        <Text text="• Use 'Refresh All' to reload all report data" style="-fx-fill: #64748b;"/>
+                        <Text text="• Switch between tabs to view different reports" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                </VBox>
+                
+                <!-- Troubleshooting -->
+                <VBox spacing="15" styleClass="card-modern">
+                    <Text text="⚠️ Troubleshooting" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                    <Separator style="-fx-background-color: #e2e8f0;"/>
+                    
+                    <VBox spacing="10">
+                        <Text text="Common Issues:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #334155;"/>
+                        <Text text="• Cannot access a feature? Check if your role has permission" style="-fx-fill: #64748b;"/>
+                        <Text text="• Product not found? Ensure barcode is correct and product exists" style="-fx-fill: #64748b;"/>
+                        <Text text="• Order not showing? Try refreshing the table or check date filters" style="-fx-fill: #64748b;"/>
+                        <Text text="• System slow? Contact IT support for performance optimization" style="-fx-fill: #64748b;"/>
+                    </VBox>
+                </VBox>
+                
+                <!-- Contact Support -->
+                <VBox spacing="25" styleClass="card-modern" style="-fx-background-color: #f0f9ff; -fx-border-color: #0ea5e9; -fx-padding: 10; -fx-border-width: 1;">
+                    <Text text="💬 Need More Help?" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #0c4a6e;"/>
+                    <Separator style="-fx-background-color: #bae6fd;"/>
+                    
+                    <VBox spacing="8">
+                        <Text text="Contact Green Code Solution:" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #075985;"/>
+                        <Text text="📧 Email: greencodesolution@gmail.com" style="-fx-fill: #0c4a6e;"/>
+                        <Text text="📞 Phone: +94 78 150 82 52" style="-fx-fill: #0c4a6e;"/>
+                        <Text text="🌐 Website: greencodesolution.web.lk" style="-fx-fill: #0c4a6e;"/>
+                        <Text text="📍 Location: Wewala, Piliyandala, Colombo" style="-fx-fill: #0c4a6e;"/>
+                    </VBox>
+                </VBox>
+                
+                </VBox>
+            </ScrollPane>
+        </children>
+    </VBox>
+</AnchorPane>

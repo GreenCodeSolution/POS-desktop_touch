@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.control.Separator?>
+
+<VBox xmlns="http://javafx.com/javafx/21"
+      xmlns:fx="http://javafx.com/fxml/1"
+      prefWidth="260" spacing="12"
+      styleClass="sidebar-modern"
+      style="-fx-background-color: #1e293b; -fx-padding: 20;">
+    
+    <children>
+        <!-- Logo/Brand -->
+        <VBox spacing="8" style="-fx-padding: 0 0 20 0;">
+            <Text text="🏪 Kumara Enterprises POS" styleClass="sidebar-brand"/>
+            <Text text="Point of Sale System" styleClass="sidebar-subtitle"/>
+        </VBox>
+        
+        <Separator style="-fx-background-color: #334155;"/>
+        
+        <!-- Navigation Menu -->
+        <VBox spacing="8" VBox.vgrow="ALWAYS" style="-fx-padding: 10 0 0 0;">
+            <JFXButton fx:id="btnDashboard" text="🏠  Dashboard" styleClass="sidebar-btn"/>
+            <JFXButton fx:id="btnCustomers" text="👥  Customers" styleClass="sidebar-btn"/>
+            <JFXButton fx:id="btnProducts" text="📦  Products" styleClass="sidebar-btn"/>
+            <JFXButton fx:id="btnPlaceOrder" text="🛒  Place Order" styleClass="sidebar-btn"/>
+            <JFXButton fx:id="btnOrderDetails" text="📋  Order Details" styleClass="sidebar-btn"/>
+            <JFXButton fx:id="btnReturns" text="🔄  Returns" styleClass="sidebar-btn"/>
+            <JFXButton fx:id="btnPurchasing" text="💰  Purchasing" styleClass="sidebar-btn"/>
+            <JFXButton fx:id="btnReports" text="📊  Reports" styleClass="sidebar-btn"/>
+        </VBox>
+        
+        <Separator style="-fx-background-color: #334155;"/>
+        
+        <!-- User Info & Logout -->
+        <VBox spacing="12" style="-fx-padding: 10 0 0 0;">
+            <VBox spacing="4" styleClass="user-card">
+                <Text fx:id="txtUserEmail" text="user@example.com" styleClass="user-email"/>
+                <Text fx:id="txtUserRole" text="ROLE: Admin" styleClass="user-role"/>
+            </VBox>
+            <JFXButton fx:id="btnLogout" text="🚪  Logout" styleClass="sidebar-btn-logout"/>
+        </VBox>
+    </children>
+</VBox>
+

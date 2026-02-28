@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Text?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.cell.PropertyValueFactory?>
+
+<AnchorPane fx:id="context" styleClass="background-modern" xmlns="http://javafx.com/javafx/21"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.devstack.pos.controller.OrderDetailsFormController"
+            stylesheets="@styles/pos-styles.css">
+   <children>
+
+      <!-- Header Bar -->
+      <VBox styleClass="header-bar" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.topAnchor="0">
+         <children>
+            <HBox alignment="CENTER_LEFT" spacing="12">
+               <Text styleClass="header-title" text="📋 All Orders">
+                  <font>
+                     <Font name="System Bold" size="24.0" />
+                  </font>
+               </Text>
+               <Region HBox.hgrow="ALWAYS" />
+               <HBox spacing="12" alignment="CENTER_RIGHT">
+<!--                  <JFXButton onAction="#btnRefreshOnAction" text="🔄 Refresh" buttonType="RAISED" styleClass="btn-primary" prefWidth="140.0">-->
+<!--                     <font>-->
+<!--                        <Font name="System Bold" size="13.0" />-->
+<!--                     </font>-->
+<!--                     <cursor>-->
+<!--                        <Cursor fx:constant="HAND" />-->
+<!--                     </cursor>-->
+<!--                  </JFXButton>-->
+               </HBox>
+            </HBox>
+         </children>
+      </VBox>
+
+      <!-- Main Content -->
+      <ScrollPane fitToWidth="true" AnchorPane.topAnchor="72" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0" AnchorPane.bottomAnchor="0" style="-fx-background: transparent; -fx-border-width: 0;">
+         <VBox spacing="25" style="-fx-padding: 32;">
+         <children>
+
+            <!-- Summary Statistics -->
+            <HBox spacing="20" alignment="CENTER_LEFT">
+               <VBox styleClass="stat-card" spacing="8" style="-fx-background-color: #3B82F6; -fx-background-radius: 10; -fx-padding: 20;" prefWidth="250">
+                  <Text text="Total Orders" style="-fx-fill: white; -fx-font-size: 14;">
+                     <font>
+                        <Font name="System" size="14.0" />
+                     </font>
+                  </Text>
+                  <Text fx:id="lblTotalOrders" text="0" style="-fx-fill: white; -fx-font-weight: bold; -fx-font-size: 24;">
+                     <font>
+                        <Font name="System Bold" size="24.0" />
+                     </font>
+                  </Text>
+                  <Text fx:id="lblOrdersPeriod" text="All Time" style="-fx-fill: white; -fx-font-size: 12;">
+                     <font>
+                        <Font name="System" size="12.0" />
+                     </font>
+                  </Text>
+               </VBox>
+               <VBox styleClass="stat-card" spacing="8" style="-fx-background-color: #10B981; -fx-background-radius: 10; -fx-padding: 20;" prefWidth="250">
+                  <Text text="Net Revenue" style="-fx-fill: white; -fx-font-size: 14;">
+                     <font>
+                        <Font name="System" size="14.0" />
+                     </font>
+                  </Text>
+                  <Text fx:id="lblTotalRevenue" text="LKR 0.00" style="-fx-fill: white; -fx-font-weight: bold; -fx-font-size: 24;">
+                     <font>
+                        <Font name="System Bold" size="24.0" />
+                     </font>
+                  </Text>
+                  <Text fx:id="lblRevenuePeriod" text="All Time" style="-fx-fill: white; -fx-font-size: 12;">
+                     <font>
+                        <Font name="System" size="12.0" />
+                     </font>
+                  </Text>
+               </VBox>
+               <VBox styleClass="stat-card" spacing="8" style="-fx-background-color: #8B5CF6; -fx-background-radius: 10; -fx-padding: 20;" prefWidth="250">
+                  <Text text="Average Order" style="-fx-fill: white; -fx-font-size: 14;">
+                     <font>
+                        <Font name="System" size="14.0" />
+                     </font>
+                  </Text>
+                  <Text fx:id="lblAvgOrder" text="LKR 0.00" style="-fx-fill: white; -fx-font-weight: bold; -fx-font-size: 24;">
+                     <font>
+                        <Font name="System Bold" size="24.0" />
+                     </font>
+                  </Text>
+                  <Text text="Per Order" style="-fx-fill: white; -fx-font-size: 12;">
+                     <font>
+                        <Font name="System" size="12.0" />
+                     </font>
+                  </Text>
+               </VBox>
+               <VBox styleClass="stat-card" spacing="8" style="-fx-background-color: #F59E0B; -fx-background-radius: 10; -fx-padding: 20;" prefWidth="250">
+                  <Text text="Today's Orders" style="-fx-fill: white; -fx-font-size: 14;">
+                     <font>
+                        <Font name="System" size="14.0" />
+                     </font>
+                  </Text>
+                  <Text fx:id="lblTodayOrders" text="0" style="-fx-fill: white; -fx-font-weight: bold; -fx-font-size: 24;">
+                     <font>
+                        <Font name="System Bold" size="24.0" />
+                     </font>
+                  </Text>
+                  <Text fx:id="lblTodayRevenue" text="LKR 0.00" style="-fx-fill: white; -fx-font-size: 12;">
+                     <font>
+                        <Font name="System" size="12.0" />
+                     </font>
+                  </Text>
+               </VBox>
+            </HBox>
+
+            <!-- Filters Section -->
+            <VBox spacing="15" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);">
+               <Text text="🔍 Search &amp; Filter" style="-fx-font-size: 18; -fx-font-weight: bold;">
+                  <font>
+                     <Font name="System Bold" size="18.0" />
+                  </font>
+               </Text>
+               <HBox spacing="16" alignment="CENTER_LEFT">
+                  <VBox spacing="4" HBox.hgrow="ALWAYS">
+                     <Text text="Search" style="-fx-font-size: 12; -fx-fill: #64748b;">
+                        <font>
+                           <Font name="System" size="12.0" />
+                        </font>
+                     </Text>
+                     <JFXTextField fx:id="txtSearch" promptText="Search by Order ID, Customer, Operator..." 
+                                  styleClass="modern-text-field">
+                        <font>
+                           <Font name="System" size="14.0" />
+                        </font>
+                     </JFXTextField>
+                  </VBox>
+                  
+                  <VBox spacing="4">
+                     <Text text="From Date" style="-fx-font-size: 12; -fx-fill: #64748b;">
+                        <font>
+                           <Font name="System" size="12.0" />
+                        </font>
+                     </Text>
+                     <DatePicker fx:id="dateFrom" promptText="From Date" prefWidth="150" />
+                  </VBox>
+                  
+                  <VBox spacing="4">
+                     <Text text="To Date" style="-fx-font-size: 12; -fx-fill: #64748b;">
+                        <font>
+                           <Font name="System" size="12.0" />
+                        </font>
+                     </Text>
+                     <DatePicker fx:id="dateTo" promptText="To Date" prefWidth="150" />
+                  </VBox>
+                  
+                  <VBox spacing="4" alignment="BOTTOM_CENTER">
+                     <HBox spacing="10" alignment="CENTER_RIGHT">
+                        <JFXButton text="🔍 Search" onAction="#btnSearchOnAction" buttonType="RAISED" styleClass="btn-success" prefWidth="120">
+                           <font>
+                              <Font name="System Bold" size="13.0" />
+                           </font>
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
+                        </JFXButton>
+                        <JFXButton text="🔄 Clear" onAction="#btnClearOnAction" buttonType="RAISED" styleClass="btn-secondary" prefWidth="120">
+                           <font>
+                              <Font name="System Bold" size="13.0" />
+                           </font>
+                           <cursor>
+                              <Cursor fx:constant="HAND" />
+                           </cursor>
+                        </JFXButton>
+                     </HBox>
+                  </VBox>
+               </HBox>
+            </VBox>
+
+            <!-- Orders Table -->
+            <VBox spacing="12" style="-fx-background-color: white; -fx-background-radius: 10; -fx-padding: 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8, 0, 0, 2);" VBox.vgrow="ALWAYS">
+               <HBox alignment="CENTER_LEFT">
+                  <Text text="📋 Order History" style="-fx-font-size: 18; -fx-font-weight: bold;">
+                     <font>
+                        <Font name="System Bold" size="18.0" />
+                     </font>
+                  </Text>
+                  <Region HBox.hgrow="ALWAYS"/>
+                  <Text fx:id="lblRecordCount" text="Showing 0 orders" style="-fx-font-size: 12; -fx-fill: #64748b;">
+                     <font>
+                        <Font name="System" size="12.0" />
+                     </font>
+                  </Text>
+               </HBox>
+               
+               <!-- Single Order History Table for all users -->
+               <TableView fx:id="tblOrders" editable="false" styleClass="table-view-modern" VBox.vgrow="ALWAYS">
+                  <columns>
+                     <TableColumn fx:id="colOrderId" text="Order ID" prefWidth="100" editable="false" sortable="false"/>
+                     <TableColumn fx:id="colCustomerName" text="Customer" prefWidth="150" editable="false" sortable="false"/>
+                     <TableColumn fx:id="colProductNames" text="Products" prefWidth="200" editable="false" sortable="false"/>
+                     <TableColumn fx:id="colDate" text="Date &amp; Time" prefWidth="160" editable="false" sortable="false"/>
+                     <TableColumn fx:id="colDiscount" text="Discount" prefWidth="90" editable="false" sortable="false"/>
+                     <TableColumn fx:id="colOperator" text="Operator" prefWidth="130" editable="false" sortable="false"/>
+                     <TableColumn fx:id="colTotal" text="Total Amount" prefWidth="130" editable="false" sortable="false"/>
+                     <TableColumn fx:id="colOrderType" text="Order Type" prefWidth="120" editable="false" sortable="false"/>
+                     <TableColumn fx:id="colAction" text="View Order" prefWidth="110" editable="false" sortable="false"/>
+                     <TableColumn fx:id="colReturnOrders" text="Return Orders" prefWidth="140" editable="false" sortable="false"/>
+                  </columns>
+               </TableView>
+            </VBox>
+
+         </children>
+      </VBox>
+      </ScrollPane>
+   </children>
+</AnchorPane>
