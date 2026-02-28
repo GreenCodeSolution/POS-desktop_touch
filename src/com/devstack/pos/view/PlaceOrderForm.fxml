@@ -19,13 +19,7 @@
                         </font>
                     </Text>
                     <Region HBox.hgrow="ALWAYS"/>
-                    <HBox spacing="12" alignment="CENTER_RIGHT">
-                        <JFXButton fx:id="btnLogout" text="🚪 Logout" onAction="#btnLogoutOnAction" styleClass="btn-outline" style="-fx-font-size: 13px; -fx-font-weight: bold;">
-                            <cursor>
-                                <Cursor fx:constant="HAND"/>
-                            </cursor>
-                        </JFXButton>
-                    </HBox>
+
                 </HBox>
             </children>
         </VBox>

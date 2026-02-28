@@ -40,9 +40,12 @@
             <VBox VBox.vgrow="ALWAYS" />
             
             <Separator style="-fx-max-width: 190; -fx-background-color: #DDDDDD;"/>
-            <VBox spacing="5" alignment="CENTER_LEFT">
-               <Text fx:id="txtUserEmail" style="-fx-fill: #64748b; -fx-font-size: 11px;" />
-               <Text fx:id="txtUserRole" style="-fx-fill: #64748b; -fx-font-size: 10px; -fx-font-weight: bold;" />
+            <VBox spacing="10" alignment="CENTER_LEFT">
+               <VBox spacing="3">
+                  <Text fx:id="txtUserEmail" style="-fx-fill: #64748b; -fx-font-size: 11px;" />
+                  <Text fx:id="txtUserRole" style="-fx-fill: #64748b; -fx-font-size: 10px; -fx-font-weight: bold;" />
+               </VBox>
+               <JFXButton fx:id="btnLogout" text="🚪 Logout" onAction="#btnLogoutOnAction" styleClass="sidebar-btn-light" style="-fx-text-fill: #ef4444; -fx-font-weight: bold;" />
             </VBox>
 
          </children>

@@ -17,7 +17,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.AnchorPane;
+
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -408,15 +407,4 @@ public class PlaceOrderFormController extends BaseController {
         selectedCustomerId = null;
     }
 
-    public void btnLogoutOnAction(ActionEvent actionEvent) {
-        try {
-            Stage stage = (Stage) context.getScene().getWindow();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/devstack/pos/view/LoginForm.fxml"));
-            loader.setControllerFactory(com.devstack.pos.PosApplication.getApplicationContext()::getBean);
-            stage.getScene().setRoot(loader.load());
-            UserSessionData.clear();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }

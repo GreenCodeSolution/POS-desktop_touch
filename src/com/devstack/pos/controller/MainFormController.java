@@ -16,6 +16,7 @@ import javafx.scene.text.Text;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import javafx.stage.Stage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
@@ -231,6 +232,19 @@ public class MainFormController implements Initializable {
             } else {
                 btn.getStyleClass().add("sidebar-btn-light");
             }
+        }
+    }
+
+    @FXML
+    public void btnLogoutOnAction(ActionEvent actionEvent) {
+        try {
+            Stage stage = (Stage) mainContext.getScene().getWindow();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/devstack/pos/view/LoginForm.fxml"));
+            loader.setControllerFactory(com.devstack.pos.PosApplication.getApplicationContext()::getBean);
+            stage.getScene().setRoot(loader.load());
+            UserSessionData.clear();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
