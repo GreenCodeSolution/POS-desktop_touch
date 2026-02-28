@@ -30,44 +30,6 @@ public class SystemSettingsService {
                 });
     }
 
-    public SystemSettings saveOrUpdateSystemSettings(SystemSettings settings) {
-        // Deactivate any existing active settings
-        systemSettingsRepository.findByIsActiveTrue()
-                .ifPresent(existing -> {
-                    existing.setIsActive(false);
-                    systemSettingsRepository.save(existing);
-                });
-
-        // Set new settings as active
-        settings.setIsActive(true);
-        return systemSettingsRepository.save(settings);
-    }
-
-    public boolean updateSystemSettings(SystemSettings settings) {
-        SystemSettings existing = getSystemSettings();
-        if (existing != null) {
-            existing.setBusinessName(settings.getBusinessName());
-            existing.setAddress(settings.getAddress());
-            existing.setContactNumber(settings.getContactNumber());
-            existing.setEmail(settings.getEmail());
-            existing.setTaxNumber(settings.getTaxNumber());
-            existing.setFooterMessage(settings.getFooterMessage());
-            // Update trial settings if provided
-            if (settings.getTrialEnabled() != null) {
-                existing.setTrialEnabled(settings.getTrialEnabled());
-            }
-            if (settings.getTrialEndDate() != null) {
-                existing.setTrialEndDate(settings.getTrialEndDate());
-            }
-            if (settings.getLogoPath() != null) {
-                existing.setLogoPath(settings.getLogoPath());
-            }
-            systemSettingsRepository.save(existing);
-            notifyListeners();
-            return true;
-        }
-        return false;
-    }
 
     private final java.util.List<Runnable> listeners = new java.util.ArrayList<>();
 
@@ -75,23 +37,5 @@ public class SystemSettingsService {
         listeners.add(listener);
     }
 
-    private void notifyListeners() {
-        listeners.forEach(Runnable::run);
-    }
 
-    public void updateLastBackupTime(java.time.LocalDateTime time) {
-        SystemSettings existing = getSystemSettings();
-        if (existing != null) {
-            existing.setLastBackupTime(time);
-            systemSettingsRepository.save(existing);
-        }
-    }
-
-    public void updateLastRestoreTime(java.time.LocalDateTime time) {
-        SystemSettings existing = getSystemSettings();
-        if (existing != null) {
-            existing.setLastRestoreTime(time);
-            systemSettingsRepository.save(existing);
-        }
-    }
 }

@@ -103,14 +103,6 @@ public class OrderDetailsFormController extends BaseController {
 
     @FXML
     public void initialize() {
-        // Enforce role-based access: Only Admins can access All Orders
-        if (!com.devstack.pos.util.AuthorizationUtil.isAdmin()) {
-            com.devstack.pos.util.AuthorizationUtil.showAdminOnlyAlert();
-            if (context != null)
-                context.setVisible(false);
-            return;
-        }
-
         initializeSidebar();
 
         // Initialize date pickers (default to last 30 days)

@@ -1,6 +1,5 @@
 package com.devstack.pos.controller;
 
-import com.devstack.pos.util.AuthorizationUtil;
 import com.jfoenix.controls.JFXButton;
 import javafx.fxml.FXML;
 import javafx.scene.text.Text;
@@ -12,10 +11,7 @@ public class HelpPageController extends BaseController {
     @FXML
     private Text txtUserEmail;
 
-    // Menu buttons for role-based visibility
-    @FXML
-    private JFXButton btnDashboard;
-
+    // Menu buttons listed for visibility management
     @FXML
     private JFXButton btnCustomer;
 
@@ -29,71 +25,37 @@ public class HelpPageController extends BaseController {
     private JFXButton btnReturns;
 
     @FXML
-    private JFXButton btnPurchase;
-
-    @FXML
     private JFXButton btnOrderDetails;
 
     @FXML
-    private JFXButton btnReports;
-
-    @FXML
     private JFXButton btnHelp;
-
-    @FXML
-    private JFXButton btnLogout;
 
     @FXML
     public void initialize() {
         // Initialize sidebar with user info
         initializeSidebar();
 
-        // Configure menu visibility based on user role
+        // Configure menu visibility - all remaining items are visible to cashiers
         configureMenuVisibility();
     }
 
     /**
-     * Configure menu visibility based on user role
-     * Normal users: Customers, POS/Orders, Return Orders, All Orders
-     * Admin users: All features including Products, Supplier, Reports
+     * Configure menu visibility. In the desktop app, all remaining items
+     * are part of the core cashier workflow and are visible to any authorized user.
      */
     private void configureMenuVisibility() {
-        boolean isAdmin = AuthorizationUtil.isAdmin();
+        setMenuItemVisible(btnCustomer, true);
+        setMenuItemVisible(btnProduct, true);
+        setMenuItemVisible(btnPlaceOrder, true);
+        setMenuItemVisible(btnReturns, true);
+        setMenuItemVisible(btnOrderDetails, true);
+        setMenuItemVisible(btnHelp, true);
+    }
 
-        // Always visible for all users (normal and admin)
-        if (btnCustomer != null) {
-            btnCustomer.setVisible(true);
-            btnCustomer.setManaged(true);
-        }
-        if (btnPlaceOrder != null) {
-            btnPlaceOrder.setVisible(true);
-            btnPlaceOrder.setManaged(true);
-        }
-        if (btnReturns != null) {
-            btnReturns.setVisible(true);
-            btnReturns.setManaged(true);
-        }
-        if (btnOrderDetails != null) {
-            btnOrderDetails.setVisible(true);
-            btnOrderDetails.setManaged(true);
-        }
-        if (btnHelp != null) {
-            btnHelp.setVisible(true);
-            btnHelp.setManaged(true);
-        }
-
-        // Admin-only features
-        if (btnProduct != null) {
-            btnProduct.setVisible(isAdmin);
-            btnProduct.setManaged(isAdmin);
-        }
-        if (btnPurchase != null) {
-            btnPurchase.setVisible(isAdmin);
-            btnPurchase.setManaged(isAdmin);
-        }
-        if (btnReports != null) {
-            btnReports.setVisible(isAdmin);
-            btnReports.setManaged(isAdmin);
+    private void setMenuItemVisible(JFXButton button, boolean visible) {
+        if (button != null) {
+            button.setVisible(visible);
+            button.setManaged(visible);
         }
     }
 

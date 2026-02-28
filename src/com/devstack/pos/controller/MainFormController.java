@@ -41,8 +41,6 @@ public class MainFormController implements Initializable {
     @FXML
     private JFXButton btnCustomer;
     @FXML
-    private JFXButton btnProduct;
-    @FXML
     private JFXButton btnPlaceOrder;
     @FXML
     private JFXButton btnPendingPayments;
@@ -65,7 +63,7 @@ public class MainFormController implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         sidebarButtons = Arrays.asList(
-                btnCustomer, btnProduct, btnPlaceOrder,
+                btnCustomer, btnPlaceOrder,
                 btnPendingPayments, btnReturns, btnOrderDetails,
                 btnHelp);
         setUserData();
@@ -82,7 +80,6 @@ public class MainFormController implements Initializable {
     private void configureSidebarVisibility() {
         // All requested buttons are visible to all authenticated users in desktop view
         setButtonVisibility(btnCustomer, true);
-        setButtonVisibility(btnProduct, true);
         setButtonVisibility(btnPlaceOrder, true);
         setButtonVisibility(btnPendingPayments, true);
         setButtonVisibility(btnReturns, true);
@@ -161,15 +158,6 @@ public class MainFormController implements Initializable {
             navigateTo("CustomerForm", btnCustomer);
         } else {
             AuthorizationUtil.showUnauthorizedAlert();
-        }
-    }
-
-    @FXML
-    public void btnProductOnAction(ActionEvent event) {
-        if (AuthorizationUtil.canAccessProducts()) {
-            navigateTo("ProductMainForm", btnProduct);
-        } else {
-            AuthorizationUtil.showAdminOnlyAlert();
         }
     }
 

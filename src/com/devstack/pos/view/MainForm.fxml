@@ -28,7 +28,6 @@
             </VBox>
             <Separator style="-fx-max-width: 180; -fx-background-color: #DDDDDD;"/>
             <JFXButton fx:id="btnCustomer" text="👥 Customers" onAction="#btnCustomerOnAction" styleClass="sidebar-btn-light" />
-            <JFXButton fx:id="btnProduct" text="📦 Products" onAction="#btnProductOnAction" styleClass="sidebar-btn-light" />
             <JFXButton fx:id="btnPlaceOrder" text="🛒 POS / Orders" onAction="#btnPlaceOrderOnAction" styleClass="sidebar-btn-light" />
             <JFXButton fx:id="btnPendingPayments" text="💳 Pending Payments" onAction="#btnPendingPaymentsOnAction" styleClass="sidebar-btn-light" />
             <JFXButton fx:id="btnReturns" text="🔄 Return Orders" onAction="#btnReturnsOnAction" styleClass="sidebar-btn-light" />
@@ -39,6 +38,12 @@
             <JFXButton fx:id="btnHelp" text="❓ Help" onAction="#btnHelpOnAction" styleClass="sidebar-btn-light" />
             
             <VBox VBox.vgrow="ALWAYS" />
+            
+            <Separator style="-fx-max-width: 190; -fx-background-color: #DDDDDD;"/>
+            <VBox spacing="5" alignment="CENTER_LEFT">
+               <Text fx:id="txtUserEmail" style="-fx-fill: #64748b; -fx-font-size: 11px;" />
+               <Text fx:id="txtUserRole" style="-fx-fill: #64748b; -fx-font-size: 10px; -fx-font-weight: bold;" />
+            </VBox>
 
          </children>
       </VBox>

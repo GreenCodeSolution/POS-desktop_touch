@@ -4,7 +4,6 @@ import com.devstack.pos.entity.ReturnOrder;
 import com.devstack.pos.entity.ReturnOrderItem;
 import com.devstack.pos.service.ReturnOrderItemService;
 import com.devstack.pos.service.ReturnOrderService;
-import com.devstack.pos.util.AuthorizationUtil;
 import com.devstack.pos.util.UserSessionData;
 import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXTextField;
@@ -89,13 +88,6 @@ public class ReturnOrdersFormController extends BaseController {
     public void initialize() {
         // Initialize sidebar
         initializeSidebar();
-
-        // Authorization check: Return Orders accessible by ADMIN and CASHIER
-        if (!AuthorizationUtil.canAccessReturnOrders()) {
-            AuthorizationUtil.showUnauthorizedAlert();
-            btnBackToDashboard(null);
-            return;
-        }
 
         // Set table column resize policy
         tblReturns.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);

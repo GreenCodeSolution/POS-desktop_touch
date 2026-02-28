@@ -1,7 +1,6 @@
 package com.devstack.pos.controller;
 
 import com.devstack.pos.service.SessionManager;
-import com.devstack.pos.util.AuthorizationUtil;
 import com.devstack.pos.util.StageManager;
 import com.devstack.pos.util.UserSessionData;
 import com.jfoenix.controls.JFXButton;
@@ -55,10 +54,10 @@ public abstract class BaseController {
             txtUserRole.setText("ROLES: " + displayRoles);
         }
 
-        // Show header logout button only for Cashier - Admin/Super Admin use sidebar
+        // Logout button is visible to all authenticated users
         if (btnLogout != null) {
-            btnLogout.setVisible(AuthorizationUtil.isCashier());
-            btnLogout.setManaged(AuthorizationUtil.isCashier());
+            btnLogout.setVisible(true);
+            btnLogout.setManaged(true);
         }
 
         // Setup activity tracking for mouse and keyboard events
@@ -110,51 +109,37 @@ public abstract class BaseController {
     @FXML
     public void btnHomeOnAction(ActionEvent event) {
         updateActivity();
-        navigateTo("PlaceOrderForm", true);
+        navigateTo("PlaceOrderForm", false);
     }
 
     @FXML
     public void btnCustomerOnAction(ActionEvent event) {
         updateActivity();
-        if (AuthorizationUtil.canAccessCustomers()) {
-            navigateTo("CustomerForm", true);
-        } else {
-            AuthorizationUtil.showUnauthorizedAlert();
-        }
-    }
-
-    @FXML
-    public void btnProductOnAction(ActionEvent event) {
-        updateActivity();
-        if (AuthorizationUtil.canAccessProducts()) {
-            navigateTo("ProductMainForm", true);
-        } else {
-            AuthorizationUtil.showAdminOnlyAlert();
-        }
+        navigateTo("CustomerForm", false);
     }
 
     @FXML
     public void btnPlaceOrderOnAction(ActionEvent event) {
         updateActivity();
-        navigateTo("PlaceOrderForm", true);
+        navigateTo("PlaceOrderForm", false);
     }
 
     @FXML
     public void btnPendingPaymentsOnAction(ActionEvent event) {
         updateActivity();
-        navigateTo("PendingPaymentsForm", true);
+        navigateTo("PendingPaymentsForm", false);
     }
 
     @FXML
     public void btnOrderDetailsOnAction(ActionEvent event) {
         updateActivity();
-        navigateTo("OrderDetailsForm", true);
+        navigateTo("OrderDetailsForm", false);
     }
 
     @FXML
     public void btnReturnsOnAction(ActionEvent event) {
         updateActivity();
-        navigateTo("ReturnOrdersForm", true);
+        navigateTo("ReturnOrdersForm", false);
     }
 
     @FXML
@@ -195,7 +180,8 @@ public abstract class BaseController {
      * Navigate to another screen
      * 
      * @param viewName  FXML file name without extension
-     * @param checkAuth Whether to check authorization
+     * @param checkAuth Whether to check authorization (deprecated - now handled at
+     *                  login)
      */
     protected void navigateTo(String viewName, boolean checkAuth) {
         try {

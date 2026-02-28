@@ -44,7 +44,6 @@ public class PDFReportService {
     private final ReturnOrderService returnOrderService;
     private final ProductService productService;
     private final CustomerService customerService;
-    private final SupplierService supplierService;
     private final ProductDetailService productDetailService;
     private final OrderItemService orderItemService;
     private final SystemSettingsService systemSettingsService;
@@ -1568,34 +1567,6 @@ public class PDFReportService {
     }
 
     /**
-     * Generate comprehensive supplier report PDF
-     */
-    public String generateSupplierReportPDF() throws IOException {
-        String fileName = "Supplier_Report_" + System.currentTimeMillis() + ".pdf";
-        String reportsDir = com.devstack.pos.util.FileStorageUtil.getReportDirectory("Supplier");
-        String filePath = com.devstack.pos.util.FileStorageUtil.getFilePath(reportsDir, fileName);
-
-        PdfWriter writer = new PdfWriter(filePath);
-        PdfDocument pdf = new PdfDocument(writer);
-        Document document = new Document(pdf);
-
-        // Header
-        addHeader(document, "Supplier & Purchase Orders Report", null, null);
-
-        // Supplier Summary
-        addSupplierSummarySection(document);
-
-        // Purchase Orders
-        addPurchaseOrdersSection(document);
-
-        // Footer
-        addFooter(document);
-
-        document.close();
-        return filePath;
-    }
-
-    /**
      * Generate comprehensive all-in-one report PDF
      */
     public String generateComprehensiveReportPDF(LocalDateTime startDate, LocalDateTime endDate)
@@ -2826,23 +2797,23 @@ public class PDFReportService {
         document.add(new Paragraph().setMarginBottom(15));
     }
 
-    private void addSupplierSummarySection(Document document) {
-        document.add(new Paragraph("SUPPLIER SUMMARY")
-                .setFontSize(16)
-                .setBold()
-                .setMarginTop(10)
-                .setMarginBottom(10));
-
-        int totalSuppliers = supplierService.findAllSuppliers().size();
-
-        Table supplierTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
-        supplierTable.setWidth(UnitValue.createPercentValue(100));
-
-        addSummaryRow(supplierTable, "Total Suppliers", String.valueOf(totalSuppliers));
-
-        document.add(supplierTable);
-        document.add(new Paragraph().setMarginBottom(15));
-    }
+//    private void addSupplierSummarySection(Document document) {
+//        document.add(new Paragraph("SUPPLIER SUMMARY")
+//                .setFontSize(16)
+//                .setBold()
+//                .setMarginTop(10)
+//                .setMarginBottom(10));
+//
+//        int totalSuppliers = supplierService.findAllSuppliers().size();
+//
+//        Table supplierTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
+//        supplierTable.setWidth(UnitValue.createPercentValue(100));
+//
+//        addSummaryRow(supplierTable, "Total Suppliers", String.valueOf(totalSuppliers));
+//
+//        document.add(supplierTable);
+//        document.add(new Paragraph().setMarginBottom(15));
+//    }
 
     private void addPurchaseOrdersSection(Document document) {
         document.add(new Paragraph("PURCHASE ORDERS")
@@ -2922,7 +2893,6 @@ public class PDFReportService {
                 .setMarginTop(10)
                 .setMarginBottom(10));
 
-        addSupplierSummarySection(document);
         addPurchaseOrdersSection(document);
     }
 

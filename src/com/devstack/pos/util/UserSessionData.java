@@ -9,31 +9,9 @@ public class UserSessionData {
     public static java.util.Set<String> permissions = new java.util.HashSet<>();
     public static LocalDateTime lastActivityTime = null;
 
-    public static boolean isAdmin() {
-        return userRoles.stream().anyMatch(role -> role.equalsIgnoreCase("ROLE_SUPER_ADMIN") ||
-                role.equalsIgnoreCase("SUPER_ADMIN") ||
-                role.equalsIgnoreCase("ROLE_ADMIN") ||
-                role.equalsIgnoreCase("ADMIN"));
-    }
-
-    public static boolean isAdminRole() {
-        return userRoles.stream().anyMatch(role -> role.equalsIgnoreCase("ROLE_ADMIN") ||
-                role.equalsIgnoreCase("ADMIN"));
-    }
-
     public static boolean isCashier() {
         return userRoles.stream().anyMatch(role -> role.equalsIgnoreCase("ROLE_CASHIER") ||
                 role.equalsIgnoreCase("CASHIER"));
-    }
-
-    public static boolean isManager() {
-        return userRoles.stream().anyMatch(role -> role.equalsIgnoreCase("ROLE_MANAGER") ||
-                role.equalsIgnoreCase("MANAGER"));
-    }
-
-    public static boolean isSuperAdmin() {
-        return userRoles.stream().anyMatch(role -> role.equalsIgnoreCase("ROLE_SUPER_ADMIN") ||
-                role.equalsIgnoreCase("SUPER_ADMIN"));
     }
 
     /**

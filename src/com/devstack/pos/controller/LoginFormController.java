@@ -86,8 +86,17 @@ public class LoginFormController implements Initializable {
                     // Extract and store user roles from JWT token
                     java.util.List<String> roles = jwtUtil.getRolesFromToken(jwtToken);
                     UserSessionData.userRoles = new java.util.HashSet<>(roles);
-                    if (UserSessionData.userRoles.isEmpty()) {
-                        UserSessionData.userRoles.add("ROLE_CASHIER");
+
+                    // Restrict access to CASHIER role ONLY for this desktop application
+                    if (!UserSessionData.isCashier()) {
+                        UserSessionData.clear();
+                        Alert accessAlert = new Alert(Alert.AlertType.ERROR);
+                        accessAlert.setTitle("Access Denied");
+                        accessAlert.setHeaderText("Insufficient Permissions");
+                        accessAlert.setContentText("This desktop application is reserved for POS Cashiers only.\n\n" +
+                                "Please log in via the Web Portal for management and administrative tasks.");
+                        accessAlert.showAndWait();
+                        return;
                     }
 
                     // Extract and store granular permissions from JWT token
@@ -103,7 +112,6 @@ public class LoginFormController implements Initializable {
                     System.out.println("=== LOGIN SUCCESSFUL ===");
                     System.out.println("User: " + txtEmail.getText());
                     System.out.println("Roles from JWT: " + UserSessionData.userRoles);
-                    System.out.println("Is Admin: " + UserSessionData.isAdmin());
                     System.out.println("Is Cashier: " + UserSessionData.isCashier());
                     System.out.println("Session monitoring started");
                     System.out.println("========================");
