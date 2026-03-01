@@ -29,6 +29,9 @@ public class ProductDetail {
     @Column(name = "barcode", columnDefinition = "TEXT")
     private String barcode; // Batch barcode image (Base64)
 
+    @Column(name = "image", columnDefinition = "TEXT")
+    private String image; // Batch specific image (Base64)
+
     @Column(name = "qty_on_hand", nullable = false, columnDefinition = "DECIMAL(10,2)")
     private double qtyOnHand; // Changed to double to support decimal quantities (e.g., 2.5 kg, 3.75 meters)
 

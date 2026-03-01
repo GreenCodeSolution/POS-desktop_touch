@@ -79,7 +79,7 @@
             </HBox>
             
             <HBox spacing="12" alignment="CENTER_LEFT">
-               <JFXButton onAction="#btnSaveUpdateOnAction" fx:id="btnSaveUpdate" text="Save Customer" buttonType="RAISED" styleClass="btn-success" prefWidth="160.0">
+               <JFXButton onAction="#btnSaveUpdateOnAction" fx:id="btnSaveUpdate" text="Save Customer" buttonType="RAISED" styleClass="btn-success" prefWidth="180.0" prefHeight="32.0">
                   <font>
                      <Font name="System Bold" size="13.0" />
                   </font>
@@ -87,7 +87,7 @@
                      <Cursor fx:constant="HAND" />
                   </cursor>
                </JFXButton>
-               <JFXButton onAction="#btnNewCustomerOnAction" text="New Customer" buttonType="RAISED" styleClass="btn-primary" prefWidth="140.0">
+               <JFXButton onAction="#btnNewCustomerOnAction" text="New Customer" buttonType="RAISED" styleClass="btn-primary" prefWidth="160.0" prefHeight="32.0">
                   <font>
                      <Font name="System Bold" size="13.0" />
                   </font>

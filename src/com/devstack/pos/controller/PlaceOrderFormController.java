@@ -18,9 +18,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import java.io.ByteArrayInputStream;
+import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -55,6 +59,7 @@ public class PlaceOrderFormController extends BaseController {
     public JFXComboBox<String> cmbPaymentMethod;
     public Text txtCustomerLoyaltyPoints;
     public JFXTextField txtPointsToUse;
+    public ImageView imgProduct;
 
     private Long selectedCustomerId = null;
     private double availableLoyaltyPoints = 0.0;
@@ -214,7 +219,22 @@ public class PlaceOrderFormController extends BaseController {
         if (barcode.isEmpty())
             return;
         try {
-            ProductDetail productDetail = productDetailService.findProductDetailByCode(barcode);
+            ProductDetail productDetail = productDetailService.findByCodeWithProduct(barcode);
+
+            // Fallback: If not found by batch code/barcode, try searching by product code
+            // (integer)
+            if (productDetail == null && barcode.matches("\\d+")) {
+                try {
+                    int pCode = Integer.parseInt(barcode);
+                    List<ProductDetail> activeBatches = productDetailService.findActiveBatchesByProductCode(pCode);
+                    if (!activeBatches.isEmpty()) {
+                        productDetail = activeBatches.get(0);
+                    }
+                } catch (NumberFormatException e) {
+                    // Not a valid integer, ignore fallback
+                }
+            }
+
             if (productDetail != null) {
                 Product product = productService.findProduct(productDetail.getProductCode());
                 txtDescription.setText(product != null ? product.getDescription() : "N/A");
@@ -222,8 +242,26 @@ public class PlaceOrderFormController extends BaseController {
                 txtQtyOnHand.setText(String.valueOf(productDetail.getQtyOnHand()));
                 txtDiscount.setText("0.0");
                 currentShowPrice = productDetail.getShowPrice();
+
+                if (productDetail.getImage() != null && !productDetail.getImage().isEmpty()) {
+                    try {
+                        String base64Image = productDetail.getImage();
+                        if (base64Image.contains(",")) {
+                            base64Image = base64Image.split(",")[1];
+                        }
+                        byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+                        imgProduct.setImage(new Image(new ByteArrayInputStream(imageBytes)));
+                    } catch (Exception e) {
+                        System.err.println("Image loading failed: " + e.getMessage());
+                        imgProduct.setImage(null);
+                    }
+                } else {
+                    imgProduct.setImage(null);
+                }
+
                 txtQty.requestFocus();
             } else {
+                imgProduct.setImage(null);
                 // Try searching by description/barcode in Product table
                 // This is a bit complex as we need a batch (ProductDetail) to sell
                 // For now, let's just use the barcode scanner primarily
@@ -291,6 +329,7 @@ public class PlaceOrderFormController extends BaseController {
         txtQty.clear();
         txtDiscount.clear();
         currentShowPrice = 0.0;
+        imgProduct.setImage(null);
         txtBarcode.requestFocus();
     }
 

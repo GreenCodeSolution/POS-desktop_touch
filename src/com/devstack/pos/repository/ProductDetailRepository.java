@@ -13,28 +13,26 @@ import java.util.Optional;
 @Repository
 public interface ProductDetailRepository extends JpaRepository<ProductDetail, Long> {
     Optional<ProductDetail> findByCode(String code);
-    
+
     @Query("SELECT pd FROM ProductDetail pd WHERE pd.code = :code ORDER BY pd.createdAt DESC")
     List<ProductDetail> findAllByCode(@Param("code") String code);
-    
+
     List<ProductDetail> findByProductCode(int productCode);
-    
+
     Optional<ProductDetail> findByBarcode(String barcode);
-    
+
     @Query("SELECT pd FROM ProductDetail pd WHERE pd.code = :code OR pd.barcode = :code")
     Optional<ProductDetail> findByCodeOrBarcode(@Param("code") String code);
-    
+
     @Query("SELECT pd FROM ProductDetail pd WHERE pd.supplierName = :supplierName ORDER BY pd.createdAt DESC")
     List<ProductDetail> findBySupplierName(@Param("supplierName") String supplierName);
-    
-    @Query("SELECT pd FROM ProductDetail pd WHERE pd.supplierName = :supplierName " +
-           "AND (:startDate IS NULL OR pd.createdAt >= :startDate) " +
-           "AND (:endDate IS NULL OR pd.createdAt <= :endDate) " +
-           "ORDER BY pd.createdAt DESC")
-    List<ProductDetail> findBySupplierNameAndDateRange(
-        @Param("supplierName") String supplierName,
-        @Param("startDate") LocalDateTime startDate,
-        @Param("endDate") LocalDateTime endDate
-    );
-}
 
+    @Query("SELECT pd FROM ProductDetail pd WHERE pd.supplierName = :supplierName " +
+            "AND (:startDate IS NULL OR pd.createdAt >= :startDate) " +
+            "AND (:endDate IS NULL OR pd.createdAt <= :endDate) " +
+            "ORDER BY pd.createdAt DESC")
+    List<ProductDetail> findBySupplierNameAndDateRange(
+            @Param("supplierName") String supplierName,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate);
+}
