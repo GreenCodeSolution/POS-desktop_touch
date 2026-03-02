@@ -26,7 +26,7 @@ public class SessionManager {
     private final TrialService trialService;
     private Timer inactivityTimer;
 
-    @Value("${session.inactivity.timeout.minutes:180}")
+    @Value("${session.inactivity.timeout.minutes}")
     private long inactivityTimeoutMinutes; // Configurable inactivity timeout in minutes (default: 180)
 
     private static final long CHECK_INTERVAL_SECONDS = 60; // Check every minute
