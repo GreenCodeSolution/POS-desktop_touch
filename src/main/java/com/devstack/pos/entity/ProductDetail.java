@@ -51,7 +51,7 @@ public class ProductDetail {
     private double profitMargin; // Calculated: (selling - buying) / buying * 100
 
     @Column(name = "product_code", nullable = false)
-    private Integer productCode;
+    private int productCode;
 
     @Column(name = "discount_availability", nullable = false)
     private boolean discountAvailability;
@@ -148,8 +148,7 @@ public class ProductDetail {
      * Get days until expiry
      */
     public long getDaysUntilExpiry() {
-        if (expiryDate == null)
-            return Long.MAX_VALUE;
+        if (expiryDate == null) return Long.MAX_VALUE;
         return java.time.temporal.ChronoUnit.DAYS.between(LocalDate.now(), expiryDate);
     }
 }
