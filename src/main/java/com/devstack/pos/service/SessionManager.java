@@ -29,7 +29,7 @@ public class SessionManager {
     @Value("${session.inactivity.timeout.minutes}")
     private long inactivityTimeoutMinutes; // Configurable inactivity timeout in minutes (default: 180)
 
-    private static final long CHECK_INTERVAL_SECONDS = 60; // Check every minute
+    private static final long CHECK_INTERVAL_SECONDS = 1; // Check every minute
     private static final long TRIAL_WARNING_INTERVAL_MINUTES = 30; // Show trial warning every 30 minutes
     private long lastTrialWarningTime = 0; // Track last time warning was shown
 
