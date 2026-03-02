@@ -179,25 +179,25 @@
     </dependencies>
 
     <build>
-        <sourceDirectory>src</sourceDirectory>
+        <sourceDirectory>src/main/java</sourceDirectory>
         <resources>
             <resource>
-                <directory>src</directory>
+                <directory>src/main/java</directory>
                 <includes>
                     <include>**/*.fxml</include>
                     <include>**/*.css</include>
-                    <include>**/*.properties</include>
                     <include>**/*.png</include>
                     <include>**/*.jpg</include>
                     <include>**/*.gif</include>
                 </includes>
             </resource>
             <resource>
-                <directory>src/resources</directory>
+                <directory>src/main/resources</directory>
                 <includes>
                     <include>**/*.properties</include>
                     <include>**/*.ttf</include>
                     <include>**/*.otf</include>
+                    <include>**/*.css</include>
                 </includes>
             </resource>
         </resources>

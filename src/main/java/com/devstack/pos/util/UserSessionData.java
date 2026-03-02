@@ -44,6 +44,20 @@ public class UserSessionData {
         return lastActivityTime.plusHours(hours).isBefore(now);
     }
 
+    /**
+     * Check if user has been inactive for more than specified minutes
+     * 
+     * @param minutes Number of minutes to check
+     * @return true if inactive for more than specified minutes
+     */
+    public static boolean isInactiveForMinutes(long minutes) {
+        if (lastActivityTime == null) {
+            return true; // No activity recorded, consider inactive
+        }
+        LocalDateTime now = LocalDateTime.now();
+        return lastActivityTime.plusMinutes(minutes).isBefore(now);
+    }
+
     public static void clear() {
         email = "";
         jwtToken = "";
