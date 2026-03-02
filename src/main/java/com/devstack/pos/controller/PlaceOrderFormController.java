@@ -236,6 +236,11 @@ public class PlaceOrderFormController extends BaseController {
             }
 
             if (productDetail != null) {
+                if (productDetail.isExpired()) {
+                    new Alert(Alert.AlertType.WARNING, "Cannot sell from expired batch: " + productDetail.getCode())
+                            .show();
+                    return;
+                }
                 Product product = productService.findProduct(productDetail.getProductCode());
                 txtDescription.setText(product != null ? product.getDescription() : "N/A");
                 txtSellingPrice.setText(String.valueOf(productDetail.getSellingPrice()));
@@ -280,8 +285,15 @@ public class PlaceOrderFormController extends BaseController {
             double qtyOnHand = Double.parseDouble(txtQtyOnHand.getText());
             double discount = txtDiscount.getText().isEmpty() ? 0.0 : Double.parseDouble(txtDiscount.getText());
 
-            if (qtyOnHand < qty) {
-                new Alert(Alert.AlertType.WARNING, "Lower info").show();
+            double currentCartQty = 0;
+            int n = isExists(txtBarcode.getText());
+            if (n != -1) {
+                currentCartQty = tms.get(n).getQty();
+            }
+
+            if (qtyOnHand < (qty + currentCartQty)) {
+                new Alert(Alert.AlertType.WARNING,
+                        "Insufficient stock. Available: " + qtyOnHand + ", In Cart: " + currentCartQty).show();
                 return;
             }
 
@@ -306,7 +318,10 @@ public class PlaceOrderFormController extends BaseController {
             tms.add(tm);
         } else {
             CartTm tm = tms.get(n);
+            double oldDiscountAmount = tm.getDiscount() * tm.getQty();
+            double newDiscountAmount = discount * qty;
             double newQuantity = tm.getQty() + qty;
+            tm.setDiscount((oldDiscountAmount + newDiscountAmount) / newQuantity);
             tm.setQty(newQuantity);
             tm.setTotalCost((tm.getSellingPrice() - tm.getDiscount()) * newQuantity);
         }
@@ -389,14 +404,21 @@ public class PlaceOrderFormController extends BaseController {
                     : Double.parseDouble(txtPointsToUse.getText());
             double finalTotal = totalCost - pointsToUse;
 
+            double orderTotalDiscount = tms.stream().mapToDouble(tm -> tm.getDiscount() * tm.getQty()).sum();
+
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setIssuedDate(LocalDateTime.now());
+            orderDetail.setDiscount(orderTotalDiscount);
             orderDetail.setTotalCost(finalTotal);
             orderDetail.setCustomerId(selectedCustomerId);
             orderDetail.setCustomerName(txtName.getText());
             orderDetail.setOperatorEmail(UserSessionData.email);
             orderDetail.setPaymentMethod(cmbPaymentMethod.getValue());
-            orderDetail.setPaymentStatus("PAID");
+            if ("CREDIT".equalsIgnoreCase(cmbPaymentMethod.getValue())) {
+                orderDetail.setPaymentStatus("PENDING");
+            } else {
+                orderDetail.setPaymentStatus("PAID");
+            }
             orderDetail.setLoyaltyPointsUsed(pointsToUse);
 
             // Earn points based on configurable rate from admin side
