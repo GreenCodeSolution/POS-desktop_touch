@@ -11,49 +11,63 @@
 <AnchorPane fx:id="mainContext" xmlns="http://javafx.com/javafx/21"
             xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.devstack.pos.controller.MainFormController"
-            stylesheets="@styles/modern-dashboard.css"
-            style="-fx-background-color: linear-gradient(to bottom right, #f4f4f9, #ffffff);">
+            stylesheets="@styles/modern-touch.css"
+            styleClass="background-touch">
    <children>
 
-      <!-- Original Sidebar -->
-      <VBox prefWidth="230" spacing="20" styleClass="sidebar-light"
-            AnchorPane.leftAnchor="0" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0">
+      <!-- Modern Touch-Optimized Sidebar -->
+      <VBox prefWidth="250" spacing="10" styleClass="sidebar-light"
+            AnchorPane.leftAnchor="0" AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+            style="-fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 10, 0, 0, 0);">
          <padding>
-            <Insets top="10" right="15" bottom="30" left="15" />
+            <Insets top="20" right="15" bottom="20" left="15" />
          </padding>
          <children>
-            <VBox spacing="8" alignment="CENTER">
-               <ImageView fx:id="imgLogo" fitHeight="70" fitWidth="80" preserveRatio="true" />
-               <Label fx:id="lblBusinessName" text="Kumara Hardware" styleClass="sidebar-title-light" style="-fx-text-fill: black; -fx-font-weight: bold;" wrapText="true" maxWidth="200" textAlignment="CENTER" alignment="CENTER"/>
+            <VBox spacing="10" alignment="CENTER" style="-fx-padding: 0 0 20 0;">
+               <ImageView fx:id="imgLogo" fitHeight="60" fitWidth="60" preserveRatio="true" />
+               <Label fx:id="lblBusinessName" text="GreenCode POS" 
+                      style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;" />
             </VBox>
-            <Separator style="-fx-max-width: 180; -fx-background-color: #DDDDDD;"/>
-            <JFXButton fx:id="btnCustomer" text="👥 Customers" onAction="#btnCustomerOnAction" styleClass="sidebar-btn-light" />
-            <JFXButton fx:id="btnPlaceOrder" text="🛒 POS / Orders" onAction="#btnPlaceOrderOnAction" styleClass="sidebar-btn-light" />
-            <JFXButton fx:id="btnPendingPayments" text="💳 Pending Payments" onAction="#btnPendingPaymentsOnAction" styleClass="sidebar-btn-light" />
-            <JFXButton fx:id="btnReturns" text="🔄 Return Orders" onAction="#btnReturnsOnAction" styleClass="sidebar-btn-light" />
-            <JFXButton fx:id="btnOrderDetails" text="📋 All Orders" onAction="#btnOrderDetailsOnAction" styleClass="sidebar-btn-light" />
             
-            <Separator style="-fx-max-width: 190; -fx-background-color: #DDDDDD;"/>
+            <JFXButton fx:id="btnPlaceOrder" text="🛒 POS Terminal" onAction="#btnPlaceOrderOnAction" 
+                       styleClass="btn-touch" maxWidth="Infinity" alignment="CENTER_LEFT"
+                       style="-fx-background-color: #f1f5f9; -fx-text-fill: #1e293b; -fx-padding: 15 20;"/>
             
-            <JFXButton fx:id="btnHelp" text="❓ Help" onAction="#btnHelpOnAction" styleClass="sidebar-btn-light" />
+            <JFXButton fx:id="btnCustomer" text="👥 Customers" onAction="#btnCustomerOnAction" 
+                       styleClass="btn-touch" maxWidth="Infinity" alignment="CENTER_LEFT"
+                       style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-padding: 15 20;"/>
+            
+            <JFXButton fx:id="btnPendingPayments" text="💳 Payments" onAction="#btnPendingPaymentsOnAction" 
+                       styleClass="btn-touch" maxWidth="Infinity" alignment="CENTER_LEFT"
+                       style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-padding: 15 20;"/>
+            
+            <JFXButton fx:id="btnReturns" text="🔄 Returns" onAction="#btnReturnsOnAction" 
+                       styleClass="btn-touch" maxWidth="Infinity" alignment="CENTER_LEFT"
+                       style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-padding: 15 20;"/>
+            
+            <JFXButton fx:id="btnOrderDetails" text="📋 History" onAction="#btnOrderDetailsOnAction" 
+                       styleClass="btn-touch" maxWidth="Infinity" alignment="CENTER_LEFT"
+                       style="-fx-background-color: transparent; -fx-text-fill: #64748b; -fx-padding: 15 20;"/>
             
             <VBox VBox.vgrow="ALWAYS" />
             
-            <Separator style="-fx-max-width: 190; -fx-background-color: #DDDDDD;"/>
-            <VBox spacing="10" alignment="CENTER_LEFT">
-               <VBox spacing="3">
-                  <Text fx:id="txtUserEmail" style="-fx-fill: #64748b; -fx-font-size: 11px;" />
-                  <Text fx:id="txtUserRole" style="-fx-fill: #64748b; -fx-font-size: 10px; -fx-font-weight: bold;" />
-               </VBox>
-               <JFXButton fx:id="btnLogout" text="🚪 Logout" onAction="#btnLogoutOnAction" styleClass="sidebar-btn-light" style="-fx-text-fill: #ef4444; -fx-font-weight: bold;" />
+            <Separator style="-fx-opacity: 0.5;"/>
+            
+            <VBox spacing="5" style="-fx-padding: 10 0;">
+               <Text fx:id="txtUserEmail" style="-fx-fill: #94a3b8; -fx-font-size: 11px;" />
+               <Text fx:id="txtUserRole" style="-fx-fill: #64748b; -fx-font-size: 10px; -fx-font-weight: bold; -fx-text-transform: uppercase;" />
             </VBox>
-
+            
+            <JFXButton fx:id="btnLogout" text="🚪 Sign Out" onAction="#btnLogoutOnAction" 
+                       styleClass="btn-touch" maxWidth="Infinity" 
+                       style="-fx-background-color: #fef2f2; -fx-text-fill: #ef4444; -fx-font-weight: bold;"/>
          </children>
       </VBox>
 
-      <!-- Content Area -->
-      <StackPane fx:id="contentPane" AnchorPane.leftAnchor="220" AnchorPane.rightAnchor="0"
-                 AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0">
+      <!-- Content Area with subtle border -->
+      <StackPane fx:id="contentPane" AnchorPane.leftAnchor="250" AnchorPane.rightAnchor="0"
+                 AnchorPane.topAnchor="0" AnchorPane.bottomAnchor="0"
+                 style="-fx-background-color: #f8fafc; -fx-border-color: #e2e8f0; -fx-border-width: 0 0 0 1;">
       </StackPane>
 
    </children>

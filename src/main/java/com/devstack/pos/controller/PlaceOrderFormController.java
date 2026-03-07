@@ -20,6 +20,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -37,7 +38,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PlaceOrderFormController extends BaseController {
     public TextField txtContact;
-    public TextField txtName;
+    public Text txtName;
     public TextField txtBarcode;
     public TextField txtDescription;
     public TextField txtSellingPrice;
@@ -60,6 +61,8 @@ public class PlaceOrderFormController extends BaseController {
     public Text txtCustomerLoyaltyPoints;
     public JFXTextField txtPointsToUse;
     public ImageView imgProduct;
+    public FlowPane productGrid;
+    public HBox categoryPane;
 
     private Long selectedCustomerId = null;
     private double availableLoyaltyPoints = 0.0;
@@ -72,6 +75,7 @@ public class PlaceOrderFormController extends BaseController {
     private final PDFReportService pdfReportService;
     private final ReceiptPrinter receiptPrinter;
     private final SystemSettingsService systemSettingsService;
+    private final CategoryService categoryService;
     private boolean isUpdatingBarcodeProgrammatically = false;
 
     private double currentShowPrice = 0.0;
@@ -137,6 +141,8 @@ public class PlaceOrderFormController extends BaseController {
 
         setupBarcodeScannerDetection();
         setupQuantityInputValidation();
+        loadCategories();
+        loadAllProducts(null);
     }
 
     private void setupQuantityInputValidation() {
@@ -157,6 +163,113 @@ public class PlaceOrderFormController extends BaseController {
     @Override
     protected String getCurrentPageName() {
         return "POS - Order Placement";
+    }
+
+    private void loadCategories() {
+        categoryPane.getChildren().clear();
+        JFXButton allBtn = new JFXButton("All Items");
+        allBtn.getStyleClass().addAll("category-btn", "active");
+        allBtn.setOnAction(e -> {
+            updateCategoryActiveState(allBtn);
+            loadAllProducts(null);
+        });
+        categoryPane.getChildren().add(allBtn);
+
+        try {
+            List<Category> categories = categoryService.findAll();
+            for (Category category : categories) {
+                JFXButton catBtn = new JFXButton(category.getName());
+                catBtn.getStyleClass().add("category-btn");
+                catBtn.setOnAction(e -> {
+                    updateCategoryActiveState(catBtn);
+                    loadAllProducts(category.getId());
+                });
+                categoryPane.getChildren().add(catBtn);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateCategoryActiveState(JFXButton selectedBtn) {
+        categoryPane.getChildren().forEach(node -> {
+            if (node instanceof JFXButton) {
+                node.getStyleClass().remove("active");
+            }
+        });
+        selectedBtn.getStyleClass().add("active");
+    }
+
+    private void loadAllProducts(Integer categoryId) {
+        productGrid.getChildren().clear();
+        try {
+            List<ProductDetail> allProducts = productDetailService.findAllProductDetails();
+            for (ProductDetail detail : allProducts) {
+                if (detail.getQtyOnHand() > 0 && !detail.isExpired()) {
+                    Product product = productService.findProduct(detail.getProductCode());
+                    if (categoryId == null || (product != null && product.getCategory() != null
+                            && product.getCategory().getId().equals(categoryId))) {
+                        productGrid.getChildren().add(createProductTile(detail));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private javafx.scene.Node createProductTile(ProductDetail detail) {
+        VBox tile = new VBox(10);
+        tile.getStyleClass().add("touch-tile");
+        tile.setPrefSize(160, 200);
+
+        ImageView imageView = new ImageView();
+        imageView.setFitWidth(100);
+        imageView.setFitHeight(100);
+        imageView.setPreserveRatio(true);
+        imageView.getStyleClass().add("touch-tile-img");
+
+        if (detail.getImage() != null && !detail.getImage().isEmpty()) {
+            try {
+                String base64Image = detail.getImage();
+                if (base64Image.contains(",")) {
+                    base64Image = base64Image.split(",")[1];
+                }
+                byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+                imageView.setImage(new Image(new ByteArrayInputStream(imageBytes)));
+            } catch (Exception e) {
+                // Default image or empty
+            }
+        }
+
+        Product product = productService.findProduct(detail.getProductCode());
+        Label lblName = new Label(product != null ? product.getDescription() : "Product");
+        lblName.getStyleClass().add("touch-tile-title");
+
+        Label lblPrice = new Label(String.format("%.2f /=", detail.getSellingPrice()));
+        lblPrice.getStyleClass().add("touch-tile-price");
+
+        tile.getChildren().addAll(imageView, lblName, lblPrice);
+
+        tile.setOnMouseClicked(event -> {
+            // Programmatically "scan" this product
+            isUpdatingBarcodeProgrammatically = true;
+            txtBarcode.setText(detail.getCode());
+            isUpdatingBarcodeProgrammatically = false;
+
+            // Fill hidden fields for existing logic
+            txtDescription.setText(product != null ? product.getDescription() : "N/A");
+            txtSellingPrice.setText(String.valueOf(detail.getSellingPrice()));
+            txtQtyOnHand.setText(String.valueOf(detail.getQtyOnHand()));
+            txtDiscount.setText("0.0");
+            currentShowPrice = detail.getShowPrice();
+
+            // Add to cart with default qty 1
+            addToCartInternal(detail.getCode(), product != null ? product.getDescription() : "N/A",
+                    detail.getSellingPrice(), 1.0, 0.0, detail.getShowPrice());
+        });
+
+        return tile;
     }
 
     public void btnBackToHomeOnAction(ActionEvent actionEvent) {
@@ -197,7 +310,7 @@ public class PlaceOrderFormController extends BaseController {
                 selectedCustomerId = null;
                 availableLoyaltyPoints = 0.0;
                 txtCustomerLoyaltyPoints.setText("Aval: 0");
-                txtName.clear();
+                txtName.setText("");
             }
         } catch (Exception e) {
             new Alert(Alert.AlertType.ERROR, "Search Error: " + e.getMessage()).show();
@@ -504,7 +617,7 @@ public class PlaceOrderFormController extends BaseController {
 
     private void clearFields() {
         txtContact.clear();
-        txtName.clear();
+        txtName.setText("");
         txtBarcode.clear();
         txtDescription.clear();
         txtSellingPrice.clear();
