@@ -4,7 +4,6 @@ import javafx.animation.FadeTransition;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -15,37 +14,28 @@ import java.io.IOException;
  * Provides consistent UI sizing across the application
  */
 public class StageManager {
-    
+
     // Login and Signup window size
     private static final double AUTH_WINDOW_WIDTH = 600;
     private static final double AUTH_WINDOW_HEIGHT = 700;
-    
+
     // Smooth transition flag
     private static boolean enableTransitions = true;
-    
+
     /**
      * Set scene to full screen (for main application screens)
      */
     public static void setFullScreen(Stage stage, Scene scene) {
-        // Get screen dimensions
-        Screen screen = Screen.getPrimary();
-        double width = screen.getVisualBounds().getWidth();
-        double height = screen.getVisualBounds().getHeight();
-        
         // Set stage properties
         stage.setScene(scene);
         stage.setMaximized(true);
-        stage.setWidth(width);
-        stage.setHeight(height);
-        stage.setX(0);
-        stage.setY(0);
-        
+
         // Optional: Set title
         if (stage.getTitle() == null || stage.getTitle().isEmpty()) {
             stage.setTitle("Kumara Enterprises POS System");
         }
     }
-    
+
     /**
      * Set scene to auth screen size (for login/signup)
      */
@@ -55,39 +45,33 @@ public class StageManager {
         stage.setHeight(AUTH_WINDOW_HEIGHT);
         stage.setResizable(false);
         stage.centerOnScreen();
-        
+
         if (stage.getTitle() == null || stage.getTitle().isEmpty()) {
             stage.setTitle("Kumara Enterprises POS System - Authentication");
         }
     }
-    
+
     /**
      * Load scene with full screen (optimized for fast navigation)
      */
     public static void loadFullScreenScene(Stage stage, Parent root) {
-        // Create scene and set it immediately for fast rendering
-        Scene scene = new Scene(root);
-        loadCSS(scene);
-        
-        // Set scene before other operations to minimize flicker
-        stage.setScene(scene);
-        
-        // Then apply full screen settings
-        Screen screen = Screen.getPrimary();
-        double width = screen.getVisualBounds().getWidth();
-        double height = screen.getVisualBounds().getHeight();
-        
-        stage.setMaximized(true);
-        stage.setWidth(width);
-        stage.setHeight(height);
-        stage.setX(0);
-        stage.setY(0);
-        
+        Scene currentScene = stage.getScene();
+        if (currentScene != null) {
+            // Keep window completely stable, just hot-swap the internal UI controls
+            currentScene.setRoot(root);
+            loadCSS(currentScene);
+        } else {
+            Scene scene = new Scene(root);
+            loadCSS(scene);
+            stage.setScene(scene);
+            stage.setMaximized(true);
+        }
+
         if (stage.getTitle() == null || stage.getTitle().isEmpty()) {
             stage.setTitle("Kumara Enterprises POS System");
         }
     }
-    
+
     /**
      * Load scene with auth screen size
      */
@@ -96,7 +80,7 @@ public class StageManager {
         loadCSS(scene);
         setAuthScreenSize(stage, scene);
     }
-    
+
     /**
      * Load CSS stylesheet into scene
      */
@@ -104,13 +88,16 @@ public class StageManager {
         try {
             var cssUrl = StageManager.class.getResource("/com/devstack/pos/view/styles/pos-styles.css");
             if (cssUrl != null) {
-                scene.getStylesheets().add(cssUrl.toExternalForm());
+                String cssExternalForm = cssUrl.toExternalForm();
+                if (!scene.getStylesheets().contains(cssExternalForm)) {
+                    scene.getStylesheets().add(cssExternalForm);
+                }
             }
         } catch (Exception e) {
             System.err.println("Failed to load CSS: " + e.getMessage());
         }
     }
-    
+
     /**
      * Set dialog window size (for popup dialogs)
      */
@@ -122,4 +109,3 @@ public class StageManager {
         stage.centerOnScreen();
     }
 }
-

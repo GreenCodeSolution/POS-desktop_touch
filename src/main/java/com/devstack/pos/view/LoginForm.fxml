@@ -11,9 +11,10 @@
       stylesheets="@styles/modern-touch.css" styleClass="background-touch" spacing="0">
     <children>
         <!-- Left Side: Login Form -->
-        <VBox alignment="CENTER" HBox.hgrow="ALWAYS" style="-fx-background-color: white;">
+        <VBox alignment="CENTER" HBox.hgrow="ALWAYS" 
+              style="-fx-background-image: url('assets/login_bg.png'); -fx-background-size: cover; -fx-background-position: center;">
             <VBox alignment="CENTER" spacing="35" maxWidth="500" 
-                  style="-fx-padding: 60;">
+                  style="-fx-padding: 60; -fx-background-color: rgba(255, 255, 255, 0.85); -fx-background-radius: 24; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 30, 0, 0, 10);">
                 <!-- Branding Section -->
                 <VBox alignment="CENTER" spacing="12">
                     <Text text="GreenCode POS" style="-fx-font-size: 38px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
