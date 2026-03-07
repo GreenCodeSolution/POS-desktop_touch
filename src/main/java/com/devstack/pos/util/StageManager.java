@@ -1,13 +1,8 @@
 package com.devstack.pos.util;
 
-import javafx.animation.FadeTransition;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import javafx.util.Duration;
-
-import java.io.IOException;
 
 /**
  * Utility class for managing stage/window configurations
@@ -20,7 +15,7 @@ public class StageManager {
     private static final double AUTH_WINDOW_HEIGHT = 700;
 
     // Smooth transition flag
-    private static boolean enableTransitions = true;
+    private static final boolean enableTransitions = true;
 
     /**
      * Set scene to full screen (for main application screens)

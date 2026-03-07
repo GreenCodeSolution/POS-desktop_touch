@@ -85,6 +85,7 @@ public class SessionManager {
 
         boolean shouldLogout = false;
         String logoutReason = "";
+        boolean showPopup = true;
 
         // Check trial version expiration first
         if (trialService.isTrialEnabled() && trialService.isTrialExpired()) {
@@ -97,12 +98,14 @@ public class SessionManager {
         // Check JWT token expiration
         else if (jwtUtil.isTokenExpired(UserSessionData.jwtToken)) {
             shouldLogout = true;
+            showPopup = false;
             logoutReason = "Your session has expired due to token expiration. Please login again.";
             log.warn("JWT token expired for user: {}", UserSessionData.email);
         }
         // Check inactivity timeout (configurable)
         else if (UserSessionData.isInactiveForMinutes(inactivityTimeoutMinutes)) {
             shouldLogout = true;
+            showPopup = false;
             String minutesText = inactivityTimeoutMinutes == 1 ? "minute" : "minutes";
             logoutReason = String.format("Your session has expired due to inactivity (%d %s). Please login again.",
                     inactivityTimeoutMinutes, minutesText);
@@ -110,7 +113,7 @@ public class SessionManager {
         }
 
         if (shouldLogout) {
-            performAutoLogout(logoutReason);
+            performAutoLogout(logoutReason, showPopup);
         } else {
             // Check and show trial warning if 7 days or less remaining (show every 30
             // minutes)
@@ -167,7 +170,7 @@ public class SessionManager {
     /**
      * Perform automatic logout
      */
-    private void performAutoLogout(String reason) {
+    private void performAutoLogout(String reason, boolean showPopup) {
         log.info("Performing auto-logout for user: {}", UserSessionData.email);
 
         // Stop monitoring
@@ -176,13 +179,15 @@ public class SessionManager {
         // Show alert to user and handle navigation
         Platform.runLater(() -> {
             try {
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Session Expired");
-                alert.setHeaderText("Your session has expired");
-                alert.setContentText(reason);
+                if (showPopup) {
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Session Expired");
+                    alert.setHeaderText("Your session has expired");
+                    alert.setContentText(reason);
 
-                // Show alert and wait for user response
-                alert.showAndWait();
+                    // Show alert and wait for user response
+                    alert.showAndWait();
+                }
 
                 // Clear session data after alert is closed (regardless of how it was closed)
                 UserSessionData.clear();
@@ -236,7 +241,7 @@ public class SessionManager {
                 loader.setControllerFactory(com.devstack.pos.PosApplication.getApplicationContext()::getBean);
 
                 javafx.scene.Parent root = loader.load();
-                StageManager.loadAuthScene(primaryStage, root);
+                StageManager.loadFullScreenScene(primaryStage, root);
             } else {
                 log.warn("No valid stage found for navigation to login screen");
                 // Try to create a new stage as last resort
@@ -248,7 +253,7 @@ public class SessionManager {
                         loader.setControllerFactory(com.devstack.pos.PosApplication.getApplicationContext()::getBean);
 
                         javafx.scene.Parent root = loader.load();
-                        StageManager.loadAuthScene(newStage, root);
+                        StageManager.loadFullScreenScene(newStage, root);
                         newStage.show();
                     } catch (Exception e) {
                         log.error("Failed to create new stage for login screen", e);

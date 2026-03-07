@@ -24,23 +24,8 @@ public class UserService {
     // Direct instantiation — no need for Spring Security bean infrastructure
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public boolean saveUser(String email, String password) {
-        if (userRepository.existsByEmail(email)) {
-            return false;
-        }
-        AppUser appUser = new AppUser();
-        appUser.setEmail(email);
-        appUser.setPassword(passwordEncoder.encode(password));
-        userRepository.save(appUser);
-        return true;
-    }
-
     public AppUser findUser(String email) {
         return userRepository.findByEmail(email).orElse(null);
-    }
-
-    public List<AppUser> findAllUsers() {
-        return userRepository.findAll();
     }
 
     public String checkPassword(String email, String password) {
@@ -78,14 +63,4 @@ public class UserService {
         }
     }
 
-    public boolean updateUser(String email, String newPassword) {
-        Optional<AppUser> userOpt = userRepository.findByEmail(email);
-        if (userOpt.isPresent()) {
-            AppUser appUser = userOpt.get();
-            appUser.setPassword(passwordEncoder.encode(newPassword));
-            userRepository.save(appUser);
-            return true;
-        }
-        return false;
-    }
 }

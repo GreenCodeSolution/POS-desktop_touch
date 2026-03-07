@@ -40,6 +40,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PDFReportService {
 
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private static final DateTimeFormatter DATE_ONLY_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    // Cache for font file paths only (not PdfFont objects - they must be created
+    // per document)
+    private static String loadedUnicodeFontPath = null; // Track which Unicode font file was loaded
+    private static String loadedMonospaceFontPath = null; // Track which monospace font file was loaded
     private final OrderDetailService orderDetailService;
     private final ReturnOrderService returnOrderService;
     private final ProductService productService;
@@ -47,17 +53,8 @@ public class PDFReportService {
     private final ProductDetailService productDetailService;
     private final OrderItemService orderItemService;
     private final SystemSettingsService systemSettingsService;
-    private final PipeConversionService pipeConversionService;
     private final ReturnOrderItemService returnOrderItemService;
     private final ProductDetailRepository productDetailRepository;
-
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private static final DateTimeFormatter DATE_ONLY_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-    // Cache for font file paths only (not PdfFont objects - they must be created
-    // per document)
-    private static String loadedUnicodeFontPath = null; // Track which Unicode font file was loaded
-    private static String loadedMonospaceFontPath = null; // Track which monospace font file was loaded
 
     // Initialize fonts on first use to ensure Sinhala support is available
     {
@@ -143,7 +140,7 @@ public class PDFReportService {
 
             if (os.contains("mac")) {
                 // macOS font paths - check multiple locations
-                fontPaths = new String[] {
+                fontPaths = new String[]{
                         // Noto Sans Sinhala (if installed) - BEST CHOICE
                         "/System/Library/Fonts/Supplemental/NotoSansSinhala-Regular.ttf",
                         "/Library/Fonts/NotoSansSinhala-Regular.ttf",
@@ -162,7 +159,7 @@ public class PDFReportService {
             } else if (os.contains("win")) {
                 String windir = System.getenv("WINDIR");
                 if (windir != null) {
-                    fontPaths = new String[] {
+                    fontPaths = new String[]{
                             windir + "\\Fonts\\arialuni.ttf", // Arial Unicode MS - BEST for Windows
                             windir + "\\Fonts\\ARIALUNI.TTF",
                             windir + "\\Fonts\\NotoSansSinhala-Regular.ttf",
@@ -171,7 +168,7 @@ public class PDFReportService {
                 }
             } else {
                 // Linux
-                fontPaths = new String[] {
+                fontPaths = new String[]{
                         "/usr/share/fonts/truetype/noto/NotoSansSinhala-Regular.ttf",
                         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
                         "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
@@ -337,7 +334,7 @@ public class PDFReportService {
             // Strategy 3: Search common font directories
             String[] searchDirs = {};
             if (os.contains("mac")) {
-                searchDirs = new String[] {
+                searchDirs = new String[]{
                         "/System/Library/Fonts/Supplemental/",
                         "/Library/Fonts/",
                         System.getProperty("user.home") + "/Library/Fonts/"
@@ -345,10 +342,10 @@ public class PDFReportService {
             } else if (os.contains("win")) {
                 String windir = System.getenv("WINDIR");
                 if (windir != null) {
-                    searchDirs = new String[] { windir + "\\Fonts\\" };
+                    searchDirs = new String[]{windir + "\\Fonts\\"};
                 }
             } else {
-                searchDirs = new String[] {
+                searchDirs = new String[]{
                         "/usr/share/fonts/truetype/",
                         "/usr/share/fonts/opentype/",
                         System.getProperty("user.home") + "/.fonts/"
@@ -384,14 +381,14 @@ public class PDFReportService {
             System.err.println("⚠⚠⚠ CRITICAL: No Unicode font with Sinhala support found!");
             System.err.println("═══════════════════════════════════════════════════════════");
             System.err.println("Sinhala text will appear as boxes (☐☐☐) in PDFs.");
-            System.err.println("");
+            System.err.println();
             System.err.println("SOLUTION: Install Noto Sans Sinhala font:");
             System.err.println("  1. Download from: https://fonts.google.com/noto/specimen/Noto+Sans+Sinhala");
             System.err.println("  2. Install the font on your Mac:");
             System.err.println("     - Double-click the .ttf file");
             System.err.println("     - Click 'Install Font' in Font Book");
             System.err.println("  3. Restart your application");
-            System.err.println("");
+            System.err.println();
             System.err.println("Alternative: Install Arial Unicode MS (if available)");
             System.err.println("═══════════════════════════════════════════════════════════");
 
@@ -535,7 +532,7 @@ public class PDFReportService {
      * Verify that a PdfFont actually supports Sinhala by testing rendering
      * This is more reliable than canDisplay() which can return true for fonts
      * without glyphs
-     * 
+     * <p>
      * IMPORTANT: Creates a NEW font for testing to avoid associating the passed
      * font with a test PDF
      */
@@ -543,7 +540,7 @@ public class PDFReportService {
         try {
             // First check: If font path contains Sinhala-related keywords, it's likely good
             String fontPathLower = fontPath.toLowerCase();
-            String[] trustedKeywords = { "sinhala", "noto", "arialuni", "unicode", "dejavu" };
+            String[] trustedKeywords = {"sinhala", "noto", "arialuni", "unicode", "dejavu"};
             boolean hasTrustedKeyword = false;
             for (String keyword : trustedKeywords) {
                 if (fontPathLower.contains(keyword)) {
@@ -619,7 +616,7 @@ public class PDFReportService {
             String[] searchDirs = {};
 
             if (os.contains("mac")) {
-                searchDirs = new String[] {
+                searchDirs = new String[]{
                         "/System/Library/Fonts/Supplemental/",
                         "/Library/Fonts/",
                         System.getProperty("user.home") + "/Library/Fonts/"
@@ -627,10 +624,10 @@ public class PDFReportService {
             } else if (os.contains("win")) {
                 String windir = System.getenv("WINDIR");
                 if (windir != null) {
-                    searchDirs = new String[] { windir + "\\Fonts\\" };
+                    searchDirs = new String[]{windir + "\\Fonts\\"};
                 }
             } else {
-                searchDirs = new String[] {
+                searchDirs = new String[]{
                         "/usr/share/fonts/truetype/",
                         "/usr/share/fonts/opentype/"
                 };
@@ -685,7 +682,7 @@ public class PDFReportService {
             if (!dir.exists() || !dir.isDirectory())
                 return null;
 
-            String[] sinhalaKeywords = { "sinhala", "noto", "arialuni", "unicode", "dejavu" };
+            String[] sinhalaKeywords = {"sinhala", "noto", "arialuni", "unicode", "dejavu"};
             File[] files = dir.listFiles((d, name) -> name.toLowerCase().endsWith(".ttf") ||
                     name.toLowerCase().endsWith(".otf"));
 
@@ -716,7 +713,7 @@ public class PDFReportService {
 
             if (dir.isFile()) {
                 String fileName = dir.getName().toLowerCase();
-                String[] sinhalaKeywords = { "sinhala", "noto", "arialuni", "unicode" };
+                String[] sinhalaKeywords = {"sinhala", "noto", "arialuni", "unicode"};
                 for (String keyword : sinhalaKeywords) {
                     if (fileName.contains(keyword) &&
                             (fileName.endsWith(".ttf") || fileName.endsWith(".otf"))) {
@@ -739,7 +736,7 @@ public class PDFReportService {
                         }
                     } else if (file.isFile()) {
                         String fileName = file.getName().toLowerCase();
-                        String[] sinhalaKeywords = { "sinhala", "noto", "arialuni", "unicode" };
+                        String[] sinhalaKeywords = {"sinhala", "noto", "arialuni", "unicode"};
                         for (String keyword : sinhalaKeywords) {
                             if (fileName.contains(keyword) &&
                                     (fileName.endsWith(".ttf") || fileName.endsWith(".otf"))) {
@@ -777,18 +774,18 @@ public class PDFReportService {
             String[] fontPaths = {};
 
             if (os.contains("mac")) {
-                fontPaths = new String[] {
+                fontPaths = new String[]{
                         "/System/Library/Fonts/Supplemental/Courier New.ttf",
                         "/Library/Fonts/Courier New.ttf"
                 };
             } else if (os.contains("win")) {
-                fontPaths = new String[] {
+                fontPaths = new String[]{
                         System.getenv("WINDIR") + "\\Fonts\\cour.ttf",
                         System.getenv("WINDIR") + "\\Fonts\\courbd.ttf"
                 };
             } else {
                 // Linux
-                fontPaths = new String[] {
+                fontPaths = new String[]{
                         "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf",
                         "/usr/share/fonts/truetype/liberation/LiberationMono-Regular.ttf"
                 };
@@ -867,42 +864,6 @@ public class PDFReportService {
             // Header: Item(14) | Price(7) | Qty(8) | Disc(6) | Total(9)
             receipt.append(String.format("%-14s %7s %8s %6s %9s\n", "Item", "Price", "Qty", "Disc", "Total"));
             receipt.append("................................................\n");
-
-            for (OrderItem itm : orderItems) {
-                if (itm == null)
-                    continue;
-                String name = pipeConversionService.convertProductName(itm.getProductName(), itm.getProductCode(),
-                        itm.getBatchCode());
-                if (name == null)
-                    name = "";
-
-                Double q = itm.getQuantity();
-                String qs;
-                if (pipeConversionService.shouldConvertQuantity(itm.getProductName(), itm.getProductCode(),
-                        itm.getBatchCode())) {
-                    qs = pipeConversionService.convertQuantityToFeet(itm.getProductName(), q, itm.getProductCode(),
-                            itm.getBatchCode());
-                } else if (q != null) {
-                    qs = "x" + (q == q.intValue() ? String.valueOf(q.intValue()) : String.format("%.2f", q));
-                } else {
-                    qs = "x0";
-                }
-
-                double up = itm.getUnitPrice() != null ? itm.getUnitPrice() : 0.0;
-                double d = itm.getDiscountPerUnit() != null ? itm.getDiscountPerUnit() : 0.0;
-                double lt = itm.getLineTotal() != null ? itm.getLineTotal() : 0.0;
-
-                if (name.length() > 14) {
-                    int chunks = (name.length() + 13) / 14;
-                    for (int i = 0; i < chunks - 1; i++) {
-                        receipt.append(name.substring(i * 14, (i + 1) * 14)).append("\n");
-                    }
-                    receipt.append(String.format("%-14s %7.1f %8s %6.2f %9.2f\n", name.substring((chunks - 1) * 14), up,
-                            qs, d, lt));
-                } else {
-                    receipt.append(String.format("%-14s %7.1f %8s %6.2f %9.2f\n", name, up, qs, d, lt));
-                }
-            }
 
             receipt.append("................................................\n");
 
@@ -1093,14 +1054,14 @@ public class PDFReportService {
         borderCell.add(contactPara);
 
         // Invoice Details and User/Transaction Details in Two Columns
-        Table detailsContainerTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
+        Table detailsContainerTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}));
         detailsContainerTable.setWidth(UnitValue.createPercentValue(100));
         detailsContainerTable.setMarginBottom(5);
 
         PdfFont detailFont = getUnicodeFont();
 
         // Left Column: Invoice Details
-        Table invoiceDetailsTable = new Table(UnitValue.createPercentArray(new float[] { 1, 2 }));
+        Table invoiceDetailsTable = new Table(UnitValue.createPercentArray(new float[]{1, 2}));
         invoiceDetailsTable.setWidth(UnitValue.createPercentValue(100));
 
         // Invoice Number
@@ -1130,7 +1091,7 @@ public class PDFReportService {
         detailsContainerTable.addCell(leftCell);
 
         // Right Column: User/Transaction Details
-        Table userTransactionTable = new Table(UnitValue.createPercentArray(new float[] { 1, 2 }));
+        Table userTransactionTable = new Table(UnitValue.createPercentArray(new float[]{1, 2}));
         userTransactionTable.setWidth(UnitValue.createPercentValue(100));
 
         // Operator/User Details
@@ -1177,7 +1138,7 @@ public class PDFReportService {
         borderCell.add(customerLabel);
 
         // Items Table
-        Table itemsTable = new Table(UnitValue.createPercentArray(new float[] { 2.5f, 1f, 1f, 1f, 1f, 1.2f }));
+        Table itemsTable = new Table(UnitValue.createPercentArray(new float[]{2.5f, 1f, 1f, 1f, 1f, 1.2f}));
         itemsTable.setWidth(UnitValue.createPercentValue(100));
         itemsTable.setMarginBottom(5);
 
@@ -1199,7 +1160,6 @@ public class PDFReportService {
             String itemName = item.getProductName();
             // Convert pipe measurements to pipe numbers for display - pass productCode and
             // batchCode to lookup ProductDetail.code
-            itemName = pipeConversionService.convertProductName(itemName, item.getProductCode(), item.getBatchCode());
             Double qty = item.getQuantity();
             double quantity = qty != null ? qty : 0.0;
             double originalPrice = item.getUnitPrice() != null ? item.getUnitPrice() : 0.0;
@@ -1219,13 +1179,9 @@ public class PDFReportService {
 
             // Quantity - convert to feet measurement if it's a pipe product
             String quantityDisplay;
-            if (pipeConversionService.shouldConvertQuantity(item.getProductName(), item.getProductCode(),
-                    item.getBatchCode())) {
-                quantityDisplay = pipeConversionService.convertQuantityToFeet(item.getProductName(), quantity,
-                        item.getProductCode(), item.getBatchCode());
-            } else {
-                quantityDisplay = String.format("%.2f", quantity);
-            }
+
+            quantityDisplay = String.format("%.2f", quantity);
+
             Cell qtyCell = new Cell()
                     .add(new Paragraph(quantityDisplay).setFont(monospaceFont).setFontSize(8))
                     .setPadding(4)
@@ -1289,7 +1245,7 @@ public class PDFReportService {
         double discount = orderDetail.getDiscount();
         double finalTotal = orderDetail.getTotalCost();
 
-        Table summaryTable = new Table(UnitValue.createPercentArray(new float[] { 2, 1 }));
+        Table summaryTable = new Table(UnitValue.createPercentArray(new float[]{2, 1}));
         summaryTable.setWidth(UnitValue.createPercentValue(50));
         summaryTable.setHorizontalAlignment(HorizontalAlignment.RIGHT);
         summaryTable.setMarginBottom(5);
@@ -1309,7 +1265,7 @@ public class PDFReportService {
         // Payment Details Section
         if (orderDetail.getCustomerPaid() != null || orderDetail.getBalance() != null ||
                 (orderDetail.getPaymentMethod() != null && !orderDetail.getPaymentMethod().isEmpty())) {
-            Table paymentTable = new Table(UnitValue.createPercentArray(new float[] { 2, 1 }));
+            Table paymentTable = new Table(UnitValue.createPercentArray(new float[]{2, 1}));
             paymentTable.setWidth(UnitValue.createPercentValue(50));
             paymentTable.setHorizontalAlignment(HorizontalAlignment.RIGHT);
             paymentTable.setMarginTop(5);
@@ -1827,12 +1783,12 @@ public class PDFReportService {
      */
     private LocalDateTime[] calculatePreviousPeriod(LocalDateTime startDate, LocalDateTime endDate) {
         if (startDate == null || endDate == null) {
-            return new LocalDateTime[] { null, null };
+            return new LocalDateTime[]{null, null};
         }
         long daysBetween = ChronoUnit.DAYS.between(startDate, endDate);
         LocalDateTime prevStartDate = startDate.minusDays(daysBetween + 1);
         LocalDateTime prevEndDate = startDate.minusDays(1);
-        return new LocalDateTime[] { prevStartDate, prevEndDate };
+        return new LocalDateTime[]{prevStartDate, prevEndDate};
     }
 
     /**
@@ -1897,7 +1853,7 @@ public class PDFReportService {
         DeviceRgb tableHeaderColor = new DeviceRgb(52, 73, 94);
         DeviceRgb lightGray = new DeviceRgb(236, 240, 241);
 
-        Table summaryTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
+        Table summaryTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}));
         summaryTable.setWidth(UnitValue.createPercentValue(100));
         summaryTable.setMarginBottom(15);
 
@@ -1987,7 +1943,7 @@ public class PDFReportService {
      * Generate insights based on KPIs
      */
     private String generateInsights(double revenue, double prevRevenue, long orders, long prevOrders, double returnRate,
-            double prevReturnRate) {
+                                    double prevReturnRate) {
         StringBuilder insights = new StringBuilder();
 
         if (revenue > prevRevenue) {
@@ -2021,7 +1977,7 @@ public class PDFReportService {
     }
 
     private void addSalesByPeriodSection(Document document, LocalDateTime startDate, LocalDateTime endDate,
-            String reportType) {
+                                         String reportType) {
         document.add(new Paragraph("📅 SALES BY PERIOD")
                 .setFontSize(12)
                 .setBold()
@@ -2063,7 +2019,7 @@ public class PDFReportService {
         }
 
         // Create table with daily breakdown
-        Table periodTable = new Table(UnitValue.createPercentArray(new float[] { 2, 2, 2, 1 }));
+        Table periodTable = new Table(UnitValue.createPercentArray(new float[]{2, 2, 2, 1}));
         periodTable.setWidth(UnitValue.createPercentValue(100));
 
         periodTable.addHeaderCell(new Cell().add(new Paragraph("Date").setBold()).setPadding(5));
@@ -2150,7 +2106,7 @@ public class PDFReportService {
         // Returns, Net
         // Qty, Revenue, Refunds, Net Revenue, Initial Qty, Qty On Hand
         Table productsTable = new Table(UnitValue
-                .createPercentArray(new float[] { 0.4F, 1.3F, 0.8F, 0.6F, 0.6F, 0.6F, 0.8F, 0.8F, 0.8F, 0.7F, 0.7F }));
+                .createPercentArray(new float[]{0.4F, 1.3F, 0.8F, 0.6F, 0.6F, 0.6F, 0.8F, 0.8F, 0.8F, 0.7F, 0.7F}));
         productsTable.setWidth(UnitValue.createPercentValue(100));
 
         productsTable.addHeaderCell(new Cell().add(new Paragraph("#").setBold().setFontSize(8)).setPadding(4));
@@ -2288,12 +2244,12 @@ public class PDFReportService {
             String catName = (String) r[0];
             Double totalRefund = ((Number) r[1]).doubleValue();
             Double totalReturnCost = ((Number) r[2]).doubleValue();
-            returnsMap.put(catName, new double[] { totalRefund, totalReturnCost });
+            returnsMap.put(catName, new double[]{totalRefund, totalReturnCost});
         }
 
         // Table with 6 columns: Product Category, Orders, Total Revenue, Refunds, Net
         // Revenue, Profit
-        Table categoryTable = new Table(UnitValue.createPercentArray(new float[] { 2, 1, 1.5F, 1.5F, 1.5F, 1.5F }));
+        Table categoryTable = new Table(UnitValue.createPercentArray(new float[]{2, 1, 1.5F, 1.5F, 1.5F, 1.5F}));
         categoryTable.setWidth(UnitValue.createPercentValue(100));
 
         categoryTable.addHeaderCell(
@@ -2312,7 +2268,7 @@ public class PDFReportService {
             Double totalRevenue = ((Number) category[2]).doubleValue();
             Double totalCost = ((Number) category[3]).doubleValue();
 
-            double[] returnsData = returnsMap.getOrDefault(categoryName, new double[] { 0.0, 0.0 });
+            double[] returnsData = returnsMap.getOrDefault(categoryName, new double[]{0.0, 0.0});
             double totalRefund = returnsData[0];
             double totalReturnCost = returnsData[1];
 
@@ -2367,7 +2323,7 @@ public class PDFReportService {
             prevTotalRefunds = returnOrderService.getTotalRefundAmountByDateRange(prevPeriod[0], prevPeriod[1]);
         }
 
-        Table returnTable = new Table(UnitValue.createPercentArray(new float[] { 2, 2, 1.5F }));
+        Table returnTable = new Table(UnitValue.createPercentArray(new float[]{2, 2, 1.5F}));
         returnTable.setWidth(UnitValue.createPercentValue(100));
 
         returnTable.addHeaderCell(new Cell().add(new Paragraph("Metric").setBold()).setPadding(8));
@@ -2428,7 +2384,7 @@ public class PDFReportService {
                     .setFontSize(10)
                     .setItalic());
         } else {
-            Table returnDetailsTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1, 1, 1, 1 }));
+            Table returnDetailsTable = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1, 1, 1}));
             returnDetailsTable.setWidth(UnitValue.createPercentValue(100));
 
             // Header row
@@ -2441,13 +2397,13 @@ public class PDFReportService {
             // Data rows
             for (ReturnOrder returnOrder : returns) {
                 returnDetailsTable.addCell(new Cell().add(new Paragraph(
-                        String.valueOf(
-                                returnOrder.getReturnId() != null ? returnOrder.getReturnId() : returnOrder.getId())))
+                                String.valueOf(
+                                        returnOrder.getReturnId() != null ? returnOrder.getReturnId() : returnOrder.getId())))
                         .setPadding(5));
                 returnDetailsTable
                         .addCell(new Cell().add(new Paragraph(String.valueOf(returnOrder.getOrderId()))).setPadding(5));
                 returnDetailsTable.addCell(new Cell().add(new Paragraph(
-                        returnOrder.getCustomerEmail() != null ? returnOrder.getCustomerEmail() : "Guest"))
+                                returnOrder.getCustomerEmail() != null ? returnOrder.getCustomerEmail() : "Guest"))
                         .setPadding(5));
                 returnDetailsTable.addCell(new Cell().add(new Paragraph(
                         String.format("LKR %,.2f", returnOrder.getRefundAmount()))).setPadding(5));
@@ -2472,7 +2428,7 @@ public class PDFReportService {
                 .filter(ProductDetail::isLowStock)
                 .count();
 
-        Table inventoryTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
+        Table inventoryTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}));
         inventoryTable.setWidth(UnitValue.createPercentValue(100));
 
         addSummaryRow(inventoryTable, "Total Products", String.valueOf(totalProducts));
@@ -2502,7 +2458,7 @@ public class PDFReportService {
             return;
         }
 
-        Table lowStockTable = new Table(UnitValue.createPercentArray(new float[] { 2, 1.5F, 1.5F, 1 }));
+        Table lowStockTable = new Table(UnitValue.createPercentArray(new float[]{2, 1.5F, 1.5F, 1}));
         lowStockTable.setWidth(UnitValue.createPercentValue(100));
 
         lowStockTable.addHeaderCell(new Cell().add(new Paragraph("Product").setBold()).setPadding(5));
@@ -2584,7 +2540,7 @@ public class PDFReportService {
                 : orderDetailService.getTotalGrossRevenue();
         Double discounts = (grossRevenue != null ? grossRevenue : 0.0) - (revenue != null ? revenue : 0.0);
 
-        Table financialTable = new Table(UnitValue.createPercentArray(new float[] { 1, 1 }));
+        Table financialTable = new Table(UnitValue.createPercentArray(new float[]{1, 1}));
         financialTable.setWidth(UnitValue.createPercentValue(100));
 
         addSummaryRow(financialTable, "Gross Revenue (Before Discount)",
@@ -2636,7 +2592,7 @@ public class PDFReportService {
         double grossRevenueVal = grossRevenue != null ? grossRevenue : 0.0;
         double discountsVal = grossRevenueVal - revenueVal;
 
-        Table comparisonTable = new Table(UnitValue.createPercentArray(new float[] { 2, 2 }));
+        Table comparisonTable = new Table(UnitValue.createPercentArray(new float[]{2, 2}));
         comparisonTable.setWidth(UnitValue.createPercentValue(100));
 
         comparisonTable.addHeaderCell(new Cell().add(new Paragraph("Metric").setBold()).setPadding(8));
@@ -2718,13 +2674,13 @@ public class PDFReportService {
 
         // Table with 7 columns: Rank, Name, Orders, Total Revenue, Refunds, Net
         // Revenue, Pending payments
-        float[] columnWidths = { 0.4F, 2.0F, 0.6F, 1.4F, 1.4F, 1.4F, 1.5F };
+        float[] columnWidths = {0.4F, 2.0F, 0.6F, 1.4F, 1.4F, 1.4F, 1.5F};
         Table customersTable = new Table(UnitValue.createPercentArray(columnWidths));
         customersTable.setWidth(UnitValue.createPercentValue(100));
 
         // Headers
-        String[] headers = { "#", "Customer Name", "Orders", "Total Revenue", "Refunds", "Net Revenue",
-                "Pending Payments" };
+        String[] headers = {"#", "Customer Name", "Orders", "Total Revenue", "Refunds", "Net Revenue",
+                "Pending Payments"};
         for (String header : headers) {
             customersTable.addHeaderCell(new Cell().add(new Paragraph(header).setBold().setFontSize(8)).setPadding(4));
         }
@@ -2928,7 +2884,7 @@ public class PDFReportService {
                 ? returnOrderService.getTotalRefundAmountByDateRange(startDate, endDate)
                 : returnOrderService.getTotalRefundAmount();
 
-        Table cashierTable = new Table(UnitValue.createPercentArray(new float[] { 0.5F, 2, 0.8F, 1, 1, 1 }));
+        Table cashierTable = new Table(UnitValue.createPercentArray(new float[]{0.5F, 2, 0.8F, 1, 1, 1}));
         cashierTable.setWidth(UnitValue.createPercentValue(100));
 
         cashierTable.addHeaderCell(new Cell().add(new Paragraph("Rank").setBold().setFontSize(8)).setPadding(4));
@@ -2970,7 +2926,7 @@ public class PDFReportService {
     }
 
     private void addCustomerPurchaseHistorySection(Document document, String customerName, LocalDateTime startDate,
-            LocalDateTime endDate) {
+                                                   LocalDateTime endDate) {
         document.add(new Paragraph("👤 CUSTOMER PURCHASE HISTORY")
                 .setFontSize(12)
                 .setBold()
@@ -3026,7 +2982,7 @@ public class PDFReportService {
                 .sum();
 
         // Summary table
-        Table summaryTable = new Table(UnitValue.createPercentArray(new float[] { 2, 2 }));
+        Table summaryTable = new Table(UnitValue.createPercentArray(new float[]{2, 2}));
         summaryTable.setWidth(UnitValue.createPercentValue(100));
         summaryTable.setMarginBottom(10);
 
@@ -3053,7 +3009,7 @@ public class PDFReportService {
         document.add(summaryTable);
 
         // Orders table
-        Table ordersTable = new Table(UnitValue.createPercentArray(new float[] { 1.5F, 1.5F, 1, 1, 1 }));
+        Table ordersTable = new Table(UnitValue.createPercentArray(new float[]{1.5F, 1.5F, 1, 1, 1}));
         ordersTable.setWidth(UnitValue.createPercentValue(100));
 
         ordersTable.addHeaderCell(new Cell().add(new Paragraph("Order Date").setBold().setFontSize(8)).setPadding(4));
@@ -3067,7 +3023,7 @@ public class PDFReportService {
                     new Cell().add(new Paragraph(order.getIssuedDate().format(DATE_ONLY_FORMATTER)).setFontSize(7))
                             .setPadding(4));
             ordersTable.addCell(new Cell().add(
-                    new Paragraph(String.valueOf(order.getCode() != null ? order.getCode() : "N/A")).setFontSize(7))
+                            new Paragraph(String.valueOf(order.getCode() != null ? order.getCode() : "N/A")).setFontSize(7))
                     .setPadding(4));
             ordersTable.addCell(new Cell()
                     .add(new Paragraph(String.format("LKR %,.2f", order.getTotalCost())).setFontSize(7)).setPadding(4));
@@ -3076,7 +3032,7 @@ public class PDFReportService {
                             .setFontSize(7))
                     .setPadding(4));
             ordersTable.addCell(new Cell().add(
-                    new Paragraph(order.getPaymentMethod() != null ? order.getPaymentMethod() : "N/A").setFontSize(7))
+                            new Paragraph(order.getPaymentMethod() != null ? order.getPaymentMethod() : "N/A").setFontSize(7))
                     .setPadding(4));
         }
 
