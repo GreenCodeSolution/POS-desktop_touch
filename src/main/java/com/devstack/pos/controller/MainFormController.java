@@ -224,13 +224,16 @@ public class MainFormController implements Initializable {
         for (JFXButton btn : sidebarButtons) {
             if (btn == null)
                 continue;
-            btn.getStyleClass().remove("sidebar-btn-active-light");
-            btn.getStyleClass().remove("sidebar-btn-light");
 
+            // Re-apply base sidebar icon class
+            if (!btn.getStyleClass().contains("sidebar-icon-btn")) {
+                btn.getStyleClass().add("sidebar-icon-btn");
+            }
+
+            // Toggle active state
+            btn.getStyleClass().remove("active");
             if (btn == activeBtn) {
-                btn.getStyleClass().add("sidebar-btn-active-light");
-            } else {
-                btn.getStyleClass().add("sidebar-btn-light");
+                btn.getStyleClass().add("active");
             }
         }
     }

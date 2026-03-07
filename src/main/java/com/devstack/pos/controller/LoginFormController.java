@@ -15,7 +15,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -28,7 +28,7 @@ import java.util.ResourceBundle;
 @Component
 @RequiredArgsConstructor
 public class LoginFormController implements Initializable {
-    public VBox context;
+    public HBox context;
     public TextField txtEmail;
     public PasswordField txtPassword;
 
@@ -39,12 +39,14 @@ public class LoginFormController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        // Set up Enter key handler for email field - move to password field
-        txtEmail.setOnKeyPressed(event -> {
-            if (event.getCode() == KeyCode.ENTER) {
-                txtPassword.requestFocus();
-            }
-        });
+        // Auto-fill username since field is hidden per user request
+        txtEmail.setText("admin@gmail.com");
+
+        // Initialize PIN to 1234 per user request
+        txtPassword.setText("");
+
+        // Ensure focus is on the password/PIN field
+        javafx.application.Platform.runLater(() -> txtPassword.requestFocus());
 
         // Set up Enter key handler for password field - trigger login
         txtPassword.setOnKeyPressed(event -> {
@@ -55,6 +57,46 @@ public class LoginFormController implements Initializable {
     }
 
     // Signup is managed via the web portal — no create account from desktop
+
+    @javafx.fxml.FXML
+    public void btnKeypadPressed(ActionEvent event) {
+        Object source = event.getSource();
+        if (source instanceof javafx.scene.control.Button) {
+            String text = ((javafx.scene.control.Button) source).getText();
+            if (txtEmail.isFocused()) {
+                txtEmail.appendText(text);
+            } else {
+                txtPassword.appendText(text);
+                txtPassword.requestFocus();
+            }
+        }
+    }
+
+    @javafx.fxml.FXML
+    public void btnKeypadClear(ActionEvent event) {
+        if (txtEmail.isFocused()) {
+            txtEmail.clear();
+        } else {
+            txtPassword.clear();
+            txtPassword.requestFocus();
+        }
+    }
+
+    @javafx.fxml.FXML
+    public void btnKeypadBackspace(ActionEvent event) {
+        if (txtEmail.isFocused()) {
+            String current = txtEmail.getText();
+            if (!current.isEmpty()) {
+                txtEmail.setText(current.substring(0, current.length() - 1));
+            }
+        } else {
+            String current = txtPassword.getText();
+            if (!current.isEmpty()) {
+                txtPassword.setText(current.substring(0, current.length() - 1));
+            }
+            txtPassword.requestFocus();
+        }
+    }
 
     public void btnSignInOnAction(ActionEvent actionEvent) {
         try {

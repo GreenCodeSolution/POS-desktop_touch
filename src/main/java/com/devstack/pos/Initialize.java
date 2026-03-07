@@ -64,6 +64,7 @@ public class Initialize extends Application {
             primaryStage.setTitle("POS System");
             primaryStage.setMinWidth(400);
             primaryStage.setMinHeight(500);
+            primaryStage.setMaximized(true);
 
             System.out.println("About to show window...");
             primaryStage.show();
@@ -71,7 +72,7 @@ public class Initialize extends Application {
 
             System.out.println("JavaFX application started successfully!");
 
-        } catch (Throwable e) {  // Changed to Throwable to catch everything
+        } catch (Throwable e) { // Changed to Throwable to catch everything
             System.err.println("════════════════════════════════════");
             System.err.println("FATAL ERROR:");
             e.printStackTrace(System.err);
