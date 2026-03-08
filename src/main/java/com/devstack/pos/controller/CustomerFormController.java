@@ -12,6 +12,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import javafx.scene.layout.VBox;
 import java.util.Optional;
 
 @Component
@@ -29,7 +30,9 @@ public class CustomerFormController extends BaseController {
     public TableColumn<CustomerTm, Double> colLoyaltyPoints;
     public TableColumn<CustomerTm, Double> colPendingPayments;
     public TableColumn<CustomerTm, Button> colOperate;
+    public VBox keyboardPane;
 
+    private TextField lastFocusedField;
     private String searchText = "";
     private Long selectedCustomerId = null;
     private final CustomerService customerService;
@@ -94,6 +97,37 @@ public class CustomerFormController extends BaseController {
 
         // Setup keyboard navigation for form fields
         setupFieldNavigation();
+
+        // Setup touch keyboard focus listeners
+        setupTouchKeyboardListeners();
+    }
+
+    private void setupTouchKeyboardListeners() {
+        txtName.focusedProperty().addListener((obs, old, isFocused) -> {
+            if (isFocused) {
+                lastFocusedField = txtName;
+                showKeyboard();
+            }
+        });
+        txtContact.focusedProperty().addListener((obs, old, isFocused) -> {
+            if (isFocused) {
+                lastFocusedField = txtContact;
+                showKeyboard();
+            }
+        });
+        txtSearch.focusedProperty().addListener((obs, old, isFocused) -> {
+            if (isFocused) {
+                lastFocusedField = txtSearch;
+                showKeyboard();
+            }
+        });
+    }
+
+    private void showKeyboard() {
+        if (keyboardPane != null) {
+            keyboardPane.setVisible(true);
+            keyboardPane.setManaged(true);
+        }
     }
 
     private void setupFieldNavigation() {
@@ -141,6 +175,7 @@ public class CustomerFormController extends BaseController {
         btnSaveUpdate.setText("Update Customer");
         txtName.setText(newValue.getName());
         txtContact.setText(newValue.getContact());
+        txtName.requestFocus();
     }
 
     public void searchCustomer(ActionEvent actionEvent) {
@@ -175,6 +210,7 @@ public class CustomerFormController extends BaseController {
                             clearFields();
                             btnSaveUpdate.setText("Save Customer");
                             tbl.getSelectionModel().clearSelection();
+                            hideKeyboard(null);
                         } else {
                             new Alert(Alert.AlertType.WARNING, "Try Again!").show();
                         }
@@ -276,6 +312,7 @@ public class CustomerFormController extends BaseController {
                     new Alert(Alert.AlertType.INFORMATION, "Customer Saved Successfully!").show();
                     clearFields();
                     loadAllCustomers(searchText);
+                    hideKeyboard(null);
                 } else {
                     new Alert(Alert.AlertType.WARNING, "Failed to save customer. Please try again!").show();
                 }
@@ -292,6 +329,7 @@ public class CustomerFormController extends BaseController {
                         loadAllCustomers(searchText);
                         selectedCustomerId = null;
                         btnSaveUpdate.setText("Save Customer");
+                        hideKeyboard(null);
                     } else {
                         new Alert(Alert.AlertType.WARNING, "Failed to update customer. Please try again!").show();
                     }
@@ -321,5 +359,48 @@ public class CustomerFormController extends BaseController {
         btnSaveUpdate.setText("Save Customer");
         clearFields();
         tbl.getSelectionModel().clearSelection();
+        txtName.requestFocus();
+    }
+
+    public void handleFieldFocus(javafx.scene.input.MouseEvent event) {
+        if (event.getSource() instanceof TextField) {
+            lastFocusedField = (TextField) event.getSource();
+        }
+        keyboardPane.setVisible(true);
+        keyboardPane.setManaged(true);
+    }
+
+    public void hideKeyboard(ActionEvent event) {
+        keyboardPane.setVisible(false);
+        keyboardPane.setManaged(false);
+    }
+
+    public void btnKeyOnAction(ActionEvent event) {
+        if (lastFocusedField != null) {
+            Button btn = (Button) event.getSource();
+            lastFocusedField.appendText(btn.getText());
+            lastFocusedField.requestFocus();
+        }
+    }
+
+    public void btnBackspaceOnAction(ActionEvent event) {
+        if (lastFocusedField != null) {
+            String current = lastFocusedField.getText();
+            if (!current.isEmpty()) {
+                lastFocusedField.setText(current.substring(0, current.length() - 1));
+            }
+            lastFocusedField.requestFocus();
+        }
+    }
+
+    public void btnEnterOnAction(ActionEvent event) {
+        if (lastFocusedField == txtName) {
+            txtContact.requestFocus();
+            lastFocusedField = txtContact;
+        } else if (lastFocusedField == txtContact) {
+            btnSaveUpdateOnAction(new ActionEvent());
+        } else if (lastFocusedField == txtSearch) {
+            searchCustomer(new ActionEvent());
+        }
     }
 }

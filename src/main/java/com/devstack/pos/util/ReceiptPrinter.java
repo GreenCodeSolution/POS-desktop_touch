@@ -1,6 +1,10 @@
 package com.devstack.pos.util;
 
 import javafx.scene.control.Alert;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.rendering.ImageType;
+import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.stereotype.Component;
 
 import javax.print.*;
@@ -9,8 +13,8 @@ import javax.print.attribute.PrintRequestAttributeSet;
 import javax.print.attribute.standard.Copies;
 import java.awt.*;
 import java.awt.font.FontRenderContext;
-import java.awt.font.TextLayout;
 import java.awt.font.TextAttribute;
+import java.awt.font.TextLayout;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -21,10 +25,6 @@ import java.nio.charset.StandardCharsets;
 import java.text.AttributedString;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.rendering.PDFRenderer;
-import org.apache.pdfbox.rendering.ImageType;
 
 /**
  * Utility class for receipt printing and cash drawer operations
