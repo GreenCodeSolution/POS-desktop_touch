@@ -631,13 +631,6 @@ public class PlaceOrderFormController extends BaseController {
                 }
             }
 
-            // 2. Validate Customer Selection for Credit/Cheque
-            if (("CREDIT".equalsIgnoreCase(paymentMethod) || "CHEQUE".equalsIgnoreCase(paymentMethod)) && selectedCustomerId == null) {
-                new Alert(Alert.AlertType.WARNING, "A customer must be selected for Credit or Cheque payments.").show();
-                txtContact.requestFocus();
-                return;
-            }
-
             double orderTotalDiscount = tms.stream().mapToDouble(tm -> tm.getDiscount() * tm.getQty()).sum() + billDiscountAmount;
 
             OrderDetail orderDetail = new OrderDetail();
