@@ -13,7 +13,7 @@
 /* ===== SIDEBAR NAVIGATION ===== */
 .sidebar-modern {
     -fx-background-color: #1e293b;
-    -fx-effect: dropshadow(gaussian, #00000033, 15, 0, 2, 0);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 8, 0, 1, 0);
 }
 
 .sidebar-brand {
@@ -89,7 +89,7 @@
     -fx-background-color: white;
     -fx-background-radius: 12;
     -fx-padding: 20 24;
-    -fx-effect: dropshadow(gaussian, #00000019, 8, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 4, 0, 0, 1);
 }
 
 .page-title {
@@ -107,12 +107,12 @@
 .card {
     -fx-background-color: #ffffff;
     -fx-background-radius: 12;
-    -fx-effect: dropshadow(gaussian, #00000026, 8, 0, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 6, 0, 0, 2);
     -fx-padding: 20;
 }
 
 .card-hover {
-    -fx-effect: dropshadow(gaussian, #00000033, 12, 0, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 10, 0, 0, 4);
 }
 
 /* Modern Buttons */
@@ -124,12 +124,12 @@
     -fx-font-weight: bold;
     -fx-padding: 12 24;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, #00000019, 4, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 3, 0, 0, 1);
 }
 
 .btn-primary:hover {
     -fx-background-color: #1d4ed8;
-    -fx-effect: dropshadow(gaussian, #00000026, 8, 0, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 6, 0, 0, 2);
 }
 
 .btn-primary:pressed {
@@ -211,7 +211,7 @@
 .text-field-modern:focused {
     -fx-border-color: #2563eb;
     -fx-border-width: 2;
-    -fx-effect: dropshadow(gaussian, #00000019, 4, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 3, 0, 0, 1);
 }
 
 /* Modern Labels */
@@ -236,7 +236,7 @@
 .dashboard-card {
     -fx-background-color: white;
     -fx-background-radius: 16;
-    -fx-effect: dropshadow(gaussian, #00000026, 8, 0, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 6, 0, 0, 2);
     -fx-padding: 24;
     -fx-pref-width: 280;
     -fx-pref-height: 180;
@@ -244,7 +244,7 @@
 }
 
 .dashboard-card:hover {
-    -fx-effect: dropshadow(gaussian, #00000033, 12, 0, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 10, 0, 0, 4);
     -fx-translate-y: -4;
 }
 
@@ -272,7 +272,7 @@
     -fx-border-color: #e2e8f0;
     -fx-border-width: 1;
     -fx-border-radius: 12;
-    -fx-effect: dropshadow(gaussian, #00000019, 4, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 3, 0, 0, 1);
 }
 
 .table-view-modern .column-header-background {
@@ -431,7 +431,7 @@ TableView .virtual-scroll-bar,
 /* Header Bar */
 .header-bar {
     -fx-background-color: white;
-    -fx-effect: dropshadow(gaussian, #00000019, 4, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 3, 0, 0, 1);
     -fx-padding: 16 24;
 }
 
@@ -445,7 +445,7 @@ TableView .virtual-scroll-bar,
 .form-section {
     -fx-background-color: white;
     -fx-background-radius: 12;
-    -fx-effect: dropshadow(gaussian, #00000019, 4, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 3, 0, 0, 1);
     -fx-padding: 24;
     -fx-spacing: 16;
 }
@@ -554,7 +554,7 @@ TableView .scroll-bar .thumb,
 .login-card {
     -fx-background-color: white;
     -fx-background-radius: 20;
-    -fx-effect: dropshadow(gaussian, #00000033, 12, 0, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 10, 0, 0, 4);
     -fx-padding: 48;
     -fx-pref-width: 420;
     -fx-pref-height: 520;
@@ -585,7 +585,7 @@ TableView .scroll-bar .thumb,
     -fx-background-color: white;
     -fx-background-radius: 8;
     -fx-padding: 16;
-    -fx-effect: dropshadow(gaussian, #00000019, 4, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 3, 0, 0, 1);
     -fx-spacing: 12;
 }
 
@@ -593,12 +593,12 @@ TableView .scroll-bar .thumb,
 .stat-card {
     -fx-background-radius: 12;
     -fx-padding: 20;
-    -fx-effect: dropshadow(gaussian, #00000026, 8, 0, 0, 4);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 6, 0, 0, 2);
     -fx-cursor: hand;
 }
 
 .stat-card:hover {
-    -fx-effect: dropshadow(gaussian, #00000033, 12, 0, 0, 6);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 10, 0, 0, 4);
     -fx-translate-y: -2;
 }
 
@@ -693,7 +693,7 @@ TableView .scroll-bar .thumb,
 .text-area:focused {
     -fx-border-color: #2563eb;
     -fx-border-width: 2;
-    -fx-effect: dropshadow(gaussian, #00000019, 4, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.06), 3, 0, 0, 1);
 }
 
 /* Separator Styling */
@@ -764,7 +764,7 @@ TableView .scroll-bar .thumb,
     -fx-font-size: 18px;
     -fx-font-weight: bold;
     -fx-cursor: hand;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 4, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.04), 3, 0, 0, 1);
     -fx-text-fill: #1e293b;
 }
 

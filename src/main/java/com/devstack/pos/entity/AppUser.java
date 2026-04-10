@@ -25,6 +25,9 @@ public class AppUser {
     @Column(name = "email", length = 100)
     private String email;
 
+    @Column(name = "first_name", length = 50)
+    private String firstName;
+
     @Column(name = "password")
     private String password;
 

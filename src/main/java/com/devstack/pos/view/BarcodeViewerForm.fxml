@@ -22,7 +22,7 @@
          </HBox>
          
          <!-- Batch Info -->
-         <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);">
+         <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 1);">
             <VBox spacing="8">
                <Text text="Description" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-fill: #34495e;"/>
                <TextArea fx:id="txtDescription" editable="false" prefHeight="60.0" wrapText="true" style="-fx-font-size: 14px;"/>
@@ -35,7 +35,7 @@
          </VBox>
          
          <!-- Barcode Image -->
-         <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);" VBox.vgrow="ALWAYS">
+         <VBox spacing="12" style="-fx-background-color: white; -fx-padding: 20; -fx-background-radius: 8; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 1);" VBox.vgrow="ALWAYS">
             <HBox alignment="CENTER_LEFT" spacing="12">
                <Text text="Barcode Image" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #2c3e50;"/>
                <Region HBox.hgrow="ALWAYS" />

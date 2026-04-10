@@ -28,7 +28,7 @@
                             <children>
                                 <Text text="Point of Sale" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
                                 <Region HBox.hgrow="ALWAYS" />
-                                <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-background-radius: 30; -fx-padding: 5 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 2);">
+                                <HBox spacing="10" alignment="CENTER_RIGHT" style="-fx-background-color: white; -fx-background-radius: 30; -fx-padding: 5 20; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.03), 3, 0, 0, 1);">
                                     <Label text="🔍" style="-fx-font-size: 20px;"/>
                                     <JFXTextField fx:id="txtBarcode" onAction="#loadProduct" promptText="Search products or scan barcode..." 
                                                   prefWidth="400" style="-fx-background-color: transparent; -fx-border-width: 0; -fx-font-size: 16px;"/>
@@ -65,7 +65,7 @@
                 </VBox>
 
                 <!-- Right Section: Cart & Checkout Sidebar -->
-                <VBox spacing="0" style="-fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 15, 0, -5, 0);" GridPane.columnIndex="1">
+                <VBox spacing="0" style="-fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 8, 0, -2, 0);" GridPane.columnIndex="1">
                     <children>
                         <!-- Selected Customer -->
                         <VBox spacing="10" style="-fx-padding: 25; -fx-background-color: #f8fafc;">

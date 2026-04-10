@@ -19,7 +19,7 @@
 .sidebar-light {
     -fx-background-color: -fx-light-background;
     -fx-padding: 24;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0.05, 0, 0);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 5, 0, 0, 0);
 }
 
 .sidebar-title-light {
@@ -73,7 +73,7 @@
     -fx-background-color: -fx-light-card-background;
     -fx-background-radius: 15;
     -fx-padding: 15;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 8, 0.1, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 4, 0, 0, 1);
 }
 
 .kpi-card-alert-light {
@@ -81,7 +81,7 @@
     /* Light red background */
     -fx-background-radius: 15;
     -fx-padding: 15;
-    -fx-effect: dropshadow(gaussian, rgba(220, 53, 69, 0.2), 10, 0.2, 0, 3);
+    -fx-effect: dropshadow(gaussian, rgba(220, 53, 69, 0.1), 5, 0, 0, 1);
 }
 
 /* ============================
@@ -92,7 +92,7 @@
     -fx-border-color: #DBEAFE;
     -fx-border-width: 1;
     -fx-border-radius: 10;
-    -fx-effect: dropshadow(gaussian, rgba(14, 165, 233, 0.15), 6, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(14, 165, 233, 0.08), 3, 0, 0, 1);
 }
 
 .summary-card-green {
@@ -100,7 +100,7 @@
     -fx-border-color: #D1FAE5;
     -fx-border-width: 1;
     -fx-border-radius: 10;
-    -fx-effect: dropshadow(gaussian, rgba(16, 185, 129, 0.15), 6, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(16, 185, 129, 0.08), 3, 0, 0, 1);
 }
 
 .summary-card-purple {
@@ -108,7 +108,7 @@
     -fx-border-color: #E9D5FF;
     -fx-border-width: 1;
     -fx-border-radius: 10;
-    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.15), 6, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(139, 92, 246, 0.08), 3, 0, 0, 1);
 }
 
 .summary-card-orange {
@@ -116,7 +116,7 @@
     -fx-border-color: #FEF3C7;
     -fx-border-width: 1;
     -fx-border-radius: 10;
-    -fx-effect: dropshadow(gaussian, rgba(245, 158, 11, 0.15), 6, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(245, 158, 11, 0.08), 3, 0, 0, 1);
 }
 
 .kpi-label-light {
@@ -177,7 +177,7 @@
     -fx-background-color: -fx-light-background;
     -fx-background-radius: 15;
     -fx-padding: 15;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 8, 0.1, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 4, 0, 0, 1);
 }
 
 .chart-title-light,

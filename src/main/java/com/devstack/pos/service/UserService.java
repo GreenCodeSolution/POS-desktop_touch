@@ -1,6 +1,8 @@
 package com.devstack.pos.service;
 
 import com.devstack.pos.entity.AppUser;
+import com.devstack.pos.entity.Role;
+import com.devstack.pos.repository.RoleRepository;
 import com.devstack.pos.repository.UserRepository;
 import com.devstack.pos.util.JwtUtil;
 import com.devstack.pos.view.tm.TokenRequest;
@@ -19,6 +21,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final JwtUtil jwtUtil;
 
     // Direct instantiation — no need for Spring Security bean infrastructure
@@ -63,4 +66,25 @@ public class UserService {
         }
     }
 
+    public List<AppUser> findActiveCashiers() {
+        System.out.println("DEBUG: findActiveCashiers() called");
+        List<AppUser> allUsers = userRepository.findAll();
+        System.out.println("DEBUG: Total users found in DB: " + allUsers.size());
+        
+        List<AppUser> cashiers = allUsers.stream()
+                .filter(user -> {
+                    // Be lenient with status: ACTIVE or null (assuming active)
+                    boolean isActive = user.getStatus() == null || "ACTIVE".equalsIgnoreCase(user.getStatus());
+                    
+                    // Check if any role matches 'CASHIER' or 'ROLE_CASHIER'
+                    boolean isCashier = user.getRoles().stream()
+                            .anyMatch(role -> role.getName().toUpperCase().contains("CASHIER"));
+                    
+                    return isActive && isCashier;
+                })
+                .collect(Collectors.toList());
+        
+        System.out.println("DEBUG: Total cashiers filtered: " + cashiers.size());
+        return cashiers;
+    }
 }

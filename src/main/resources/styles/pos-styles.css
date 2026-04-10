@@ -13,9 +13,9 @@
     -fx-text-primary: #1e293b;
     -fx-text-secondary: #64748b;
     -fx-border-color: #e2e8f0;
-    -fx-shadow-sm: dropshadow(gaussian, rgba(0,0,0,0.1), 4, 0, 0, 2);
-    -fx-shadow-md: dropshadow(gaussian, rgba(0,0,0,0.15), 8, 0, 0, 4);
-    -fx-shadow-lg: dropshadow(gaussian, rgba(0,0,0,0.2), 12, 0, 0, 6);
+    -fx-shadow-sm: dropshadow(gaussian, rgba(0,0,0,0.05), 3, 0, 0, 1);
+    -fx-shadow-md: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 3);
+    -fx-shadow-lg: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 5);
 }
 
 /* Modern Background */
@@ -83,7 +83,7 @@
     -fx-font-size: 15px !important;
     -fx-border-color: #3b82f6 !important;
     -fx-border-width: 2 2 0 2 !important;
-    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.3), 4, 0, 0, 2) !important;
+    -fx-effect: dropshadow(gaussian, rgba(59, 130, 246, 0.15), 3, 0, 0, 1) !important;
 }
 
 .tab-pane-custom .tab-content-area {
