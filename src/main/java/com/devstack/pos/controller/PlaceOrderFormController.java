@@ -21,6 +21,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
+import javafx.geometry.Pos;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -219,15 +220,14 @@ public class PlaceOrderFormController extends BaseController {
     }
 
     private javafx.scene.Node createProductTile(ProductDetail detail) {
-        VBox tile = new VBox(10);
+        VBox tile = new VBox(12);
         tile.getStyleClass().add("touch-tile");
-        tile.setPrefSize(160, 200);
+        tile.setPrefSize(180, 240);
 
         ImageView imageView = new ImageView();
-        imageView.setFitWidth(100);
-        imageView.setFitHeight(100);
+        imageView.setFitWidth(130);
+        imageView.setFitHeight(130);
         imageView.setPreserveRatio(true);
-        imageView.getStyleClass().add("touch-tile-img");
 
         if (detail.getImage() != null && !detail.getImage().isEmpty()) {
             try {
@@ -242,14 +242,22 @@ public class PlaceOrderFormController extends BaseController {
             }
         }
 
+        StackPane imgContainer = new StackPane(imageView);
+        imgContainer.setPrefSize(140, 140);
+        imgContainer.setMaxSize(140, 140);
+        imgContainer.getStyleClass().add("touch-tile-img");
+        imgContainer.setAlignment(Pos.CENTER);
+
         Product product = productService.findProduct(detail.getProductCode());
         Label lblName = new Label(product != null ? product.getDescription() : "Product");
         lblName.getStyleClass().add("touch-tile-title");
+        lblName.setWrapText(true);
+        lblName.setMaxWidth(160);
 
         Label lblPrice = new Label(String.format("%.2f /=", detail.getSellingPrice()));
         lblPrice.getStyleClass().add("touch-tile-price");
 
-        tile.getChildren().addAll(imageView, lblName, lblPrice);
+        tile.getChildren().addAll(imgContainer, lblName, lblPrice);
 
         tile.setOnMouseClicked(event -> {
             // Programmatically "scan" this product

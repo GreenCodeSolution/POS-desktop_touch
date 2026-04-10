@@ -44,9 +44,13 @@
 }
 
 .sidebar-btn-active-light {
-    -fx-background-color: rgba(0, 123, 255, 0.2);
+    -fx-background-color: rgba(0, 123, 255, 0.08);
     -fx-text-fill: -fx-primary-color;
     -fx-font-weight: bold;
+    -fx-border-color: -fx-primary-color;
+    -fx-border-width: 0 0 0 4;
+    -fx-border-radius: 0 8 8 0;
+    -fx-background-radius: 0 8 8 0;
 }
 
 /* ============================

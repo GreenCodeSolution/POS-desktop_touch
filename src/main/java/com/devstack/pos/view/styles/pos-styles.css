@@ -43,9 +43,13 @@
 }
 
 .sidebar-btn-active {
-    -fx-background-color: #3b82f6;
+    -fx-background-color: #334155;
     -fx-text-fill: white;
     -fx-font-weight: bold;
+    -fx-border-color: #3b82f6;
+    -fx-border-width: 0 0 0 4;
+    -fx-border-radius: 0 8 8 0;
+    -fx-background-radius: 0 8 8 0;
 }
 
 .sidebar-btn-logout {

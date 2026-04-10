@@ -73,3 +73,43 @@
     -fx-background-radius: 12;
     -fx-font-weight: bold;
 }
+
+/* Touch UI Tiles (POS Section) */
+.touch-tile {
+    -fx-background-color: white;
+    -fx-background-radius: 16;
+    -fx-padding: 15;
+    -fx-alignment: CENTER;
+    -fx-cursor: hand;
+    -fx-border-color: #f1f5f9;
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+    -fx-spacing: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.03), 4, 0, 0, 1);
+}
+
+.touch-tile:hover {
+    -fx-border-color: #6366f1;
+    -fx-background-color: #f8fafc;
+    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.1), 8, 0, 0, 2);
+}
+
+.touch-tile-img {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 4, 0, 0, 2);
+    -fx-border-radius: 12;
+}
+
+.touch-tile-title {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #1e293b;
+    -fx-text-alignment: CENTER;
+}
+
+.touch-tile-price {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6366f1;
+}
