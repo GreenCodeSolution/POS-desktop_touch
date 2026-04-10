@@ -535,7 +535,43 @@ public class PlaceOrderFormController extends BaseController {
             double totalCost = tms.stream().mapToDouble(CartTm::getTotalCost).sum();
             double pointsToUse = txtPointsToUse.getText().isEmpty() ? 0.0
                     : Double.parseDouble(txtPointsToUse.getText());
+            
+            if (pointsToUse > availableLoyaltyPoints) {
+                new Alert(Alert.AlertType.WARNING, "Not enough loyalty points available.").show();
+                return;
+            }
+            
             double finalTotal = totalCost - pointsToUse;
+            String paymentMethod = cmbPaymentMethod.getValue();
+            String paidText = txtCustomerPaid.getText().trim();
+
+            // 1. Validate Payment Amount for Cash/Card
+            if ("CASH".equalsIgnoreCase(paymentMethod) || "CARD".equalsIgnoreCase(paymentMethod)) {
+                if (paidText.isEmpty()) {
+                    new Alert(Alert.AlertType.WARNING, "Please enter the amount paid by the customer.").show();
+                    txtCustomerPaid.requestFocus();
+                    return;
+                }
+                try {
+                    double paidAmount = Double.parseDouble(paidText);
+                    if (paidAmount < finalTotal) {
+                        new Alert(Alert.AlertType.WARNING, "Insufficient payment. Amount must be at least " + String.format("%.2f", finalTotal)).show();
+                        txtCustomerPaid.requestFocus();
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    new Alert(Alert.AlertType.ERROR, "Invalid payment amount entered.").show();
+                    txtCustomerPaid.requestFocus();
+                    return;
+                }
+            }
+
+            // 2. Validate Customer Selection for Credit/Cheque
+            if (("CREDIT".equalsIgnoreCase(paymentMethod) || "CHEQUE".equalsIgnoreCase(paymentMethod)) && selectedCustomerId == null) {
+                new Alert(Alert.AlertType.WARNING, "A customer must be selected for Credit or Cheque payments.").show();
+                txtContact.requestFocus();
+                return;
+            }
 
             double orderTotalDiscount = tms.stream().mapToDouble(tm -> tm.getDiscount() * tm.getQty()).sum();
 
