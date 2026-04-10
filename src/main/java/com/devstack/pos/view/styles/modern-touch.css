@@ -1,7 +1,7 @@
 /* Modern Touch-Optimized Stylesheet - GreenCode POS */
 .root {
     -fx-font-family: "Segoe UI", "Inter", "Roboto", sans-serif;
-    -fx-primary: #6366f1;
+    -fx-primary: #2563eb;
 }
 
 .background-touch {
@@ -38,16 +38,16 @@
 }
 
 .sidebar-icon-btn.active {
-    -fx-background-color: rgba(99, 102, 241, 0.12);
-    -fx-text-fill: rgba(0, 123, 255, 0.15);
-    -fx-border-color: rgba(0, 123, 255, 0.15);
+    -fx-background-color: rgba(37, 99, 235, 0.12);
+    -fx-text-fill: #2563eb;
+    -fx-border-color: #2563eb;
     -fx-border-width: 0 0 0 4;
     -fx-border-radius: 0;
     -fx-background-radius: 0 16 16 0;
 }
 
 .sidebar-icon-btn:pressed {
-    -fx-background-color: rgba(99, 102, 241, 0.2);
+    -fx-background-color: rgba(37, 99, 235, 0.2);
 }
 
 /* ScrollPane */
@@ -72,11 +72,11 @@
 
 .keypad-btn-modern:hover {
     -fx-background-color: #f8fafc;
-    -fx-border-color: #6366f1;
+    -fx-border-color: #2563eb;
 }
 
 .btn-touch-primary {
-    -fx-background-color: #6366f1;
+    -fx-background-color: #2563eb;
     -fx-text-fill: white;
     -fx-background-radius: 12;
     -fx-font-weight: bold;
@@ -97,9 +97,9 @@
 }
 
 .touch-tile:hover {
-    -fx-border-color: #6366f1;
+    -fx-border-color: #2563eb;
     -fx-background-color: #f8fafc;
-    -fx-effect: dropshadow(gaussian, rgba(99,102,241,0.1), 8, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.1), 8, 0, 0, 2);
 }
 
 .touch-tile-img {
@@ -119,7 +119,7 @@
 .touch-tile-price {
     -fx-font-size: 13px;
     -fx-font-weight: bold;
-    -fx-text-fill: #6366f1;
+    -fx-text-fill: #2563eb;
 }
 
 /* Professional Category Selectors */
@@ -138,15 +138,15 @@
 
 .category-btn:hover {
     -fx-background-color: #f8fafc;
-    -fx-border-color: #6366f1;
-    -fx-text-fill: #6366f1;
+    -fx-border-color: #2563eb;
+    -fx-text-fill: #2563eb;
 }
 
 .category-btn.active {
-    -fx-background-color: #6366f1;
+    -fx-background-color: #2563eb;
     -fx-text-fill: white;
-    -fx-border-color: #6366f1;
-    -fx-effect: dropshadow(gaussian, rgba(99, 102, 241, 0.3), 8, 0, 0, 4);
+    -fx-border-color: #2563eb;
+    -fx-effect: dropshadow(gaussian, rgba(37, 99, 235, 0.3), 8, 0, 0, 4);
 }
 
 .category-scroll {

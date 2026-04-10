@@ -82,7 +82,7 @@
                                 <HBox alignment="CENTER_LEFT" spacing="10">
                                     <Text text="Current Order" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
                                     <Region HBox.hgrow="ALWAYS" />
-                                    <JFXButton text="＋ Customer" onAction="#btnAddNewCustomerOnAction" style="-fx-text-fill: #4f46e5; -fx-font-weight: bold;"/>
+                                    <JFXButton text="＋ Customer" onAction="#btnAddNewCustomerOnAction" style="-fx-text-fill: #2563eb; -fx-font-weight: bold;"/>
                                 </HBox>
                                 <VBox spacing="5" alignment="CENTER_LEFT">
                                     <children>
@@ -95,7 +95,7 @@
                                                 <Label text="📞" style="-fx-font-size: 18px; -fx-opacity: 0.4;"/>
                                             </children>
                                         </HBox>
-                                        <Text fx:id="txtName" text="Walk-in Customer" style="-fx-fill: #4f46e5; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                                        <Text fx:id="txtName" text="Walk-in Customer" style="-fx-fill: #2563eb; -fx-font-size: 14px; -fx-font-weight: bold;"/>
                                     </children>
                                 </VBox>
                             </children>
