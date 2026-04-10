@@ -75,15 +75,20 @@
                                     <Region HBox.hgrow="ALWAYS" />
                                     <JFXButton text="＋ Customer" onAction="#btnAddNewCustomerOnAction" style="-fx-text-fill: #4f46e5; -fx-font-weight: bold;"/>
                                 </HBox>
-                                <HBox spacing="10" alignment="CENTER_LEFT">
-                                    <ImageView fitHeight="40" fitWidth="40" preserveRatio="true" opacity="0.5">
-                                        <image><Image url="@../../../../../resources/images/user-icon.png"/></image>
-                                    </ImageView>
-                                    <VBox spacing="2">
-                                        <JFXTextField fx:id="txtContact" onAction="#searchCustomer" promptText="Enter Phone Number" style="-fx-font-size: 14px; -fx-pref-height: 30;"/>
-                                        <Text fx:id="txtName" text="Walk-in Customer" style="-fx-fill: #64748b; -fx-font-size: 13px;"/>
-                                    </VBox>
-                                </HBox>
+                                <VBox spacing="5" alignment="CENTER_LEFT">
+                                    <children>
+                                        <Text text="Customer Phone Number" style="-fx-fill: #64748b; -fx-font-size: 12px; -fx-font-weight: bold;"/>
+                                        <HBox alignment="CENTER_LEFT" spacing="10">
+                                            <children>
+                                                <JFXTextField fx:id="txtContact" onAction="#searchCustomer" promptText="Enter Phone Number" 
+                                                              style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-pref-height: 35;" 
+                                                              HBox.hgrow="ALWAYS" alignment="CENTER_LEFT"/>
+                                                <Label text="📞" style="-fx-font-size: 18px; -fx-opacity: 0.4;"/>
+                                            </children>
+                                        </HBox>
+                                        <Text fx:id="txtName" text="Walk-in Customer" style="-fx-fill: #4f46e5; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                                    </children>
+                                </VBox>
                             </children>
                         </VBox>
 
@@ -127,6 +132,16 @@
                                     <Text text="Subtotal" style="-fx-fill: #64748b; -fx-font-size: 16px;"/>
                                     <Region HBox.hgrow="ALWAYS" />
                                     <Text fx:id="txtTotal" text="0.00 /=" style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                                </HBox>
+
+                                <HBox alignment="CENTER_LEFT" spacing="10" style="-fx-background-color: #fef2f2; -fx-padding: 10; -fx-background-radius: 8;">
+                                    <children>
+                                        <Text text="Discount (%)" style="-fx-fill: #991b1b; -fx-font-size: 14px; -fx-font-weight: bold;"/>
+                                        <Region HBox.hgrow="ALWAYS" />
+                                        <JFXTextField fx:id="txtBillDiscount" onKeyReleased="#calculateBalance" promptText="0" prefWidth="60" 
+                                                      style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #ef4444; -fx-alignment: CENTER_RIGHT;"/>
+                                        <Text text=" %" style="-fx-fill: #ef4444; -fx-font-size: 16px; -fx-font-weight: bold;"/>
+                                    </children>
                                 </HBox>
                                 
                                 <VBox spacing="8">

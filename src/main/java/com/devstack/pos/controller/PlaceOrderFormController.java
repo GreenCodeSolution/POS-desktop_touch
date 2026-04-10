@@ -61,6 +61,7 @@ public class PlaceOrderFormController extends BaseController {
     public JFXComboBox<String> cmbPaymentMethod;
     public Text txtCustomerLoyaltyPoints;
     public JFXTextField txtPointsToUse;
+    public JFXTextField txtBillDiscount;
     public Text txtPointsToEarn;
     public ImageView imgProduct;
     public FlowPane productGrid;
@@ -79,6 +80,7 @@ public class PlaceOrderFormController extends BaseController {
     private final SystemSettingsService systemSettingsService;
     private final CategoryService categoryService;
     private boolean isUpdatingBarcodeProgrammatically = false;
+    private Integer activeCategoryId = null;
 
     private double currentShowPrice = 0.0;
 
@@ -144,7 +146,7 @@ public class PlaceOrderFormController extends BaseController {
         setupBarcodeScannerDetection();
         setupQuantityInputValidation();
         loadCategories();
-        loadAllProducts(null);
+        loadAllProducts(null, null);
     }
 
     private void setupQuantityInputValidation() {
@@ -172,8 +174,9 @@ public class PlaceOrderFormController extends BaseController {
         JFXButton allBtn = new JFXButton("All Items");
         allBtn.getStyleClass().addAll("category-btn", "active");
         allBtn.setOnAction(e -> {
+            activeCategoryId = null;
             updateCategoryActiveState(allBtn);
-            loadAllProducts(null);
+            loadAllProducts(null, txtBarcode.getText());
         });
         categoryPane.getChildren().add(allBtn);
 
@@ -183,8 +186,9 @@ public class PlaceOrderFormController extends BaseController {
                 JFXButton catBtn = new JFXButton(category.getName());
                 catBtn.getStyleClass().add("category-btn");
                 catBtn.setOnAction(e -> {
+                    activeCategoryId = category.getId();
                     updateCategoryActiveState(catBtn);
-                    loadAllProducts(category.getId());
+                    loadAllProducts(category.getId(), txtBarcode.getText());
                 });
                 categoryPane.getChildren().add(catBtn);
             }
@@ -202,17 +206,33 @@ public class PlaceOrderFormController extends BaseController {
         selectedBtn.getStyleClass().add("active");
     }
 
-    private void loadAllProducts(Integer categoryId) {
+    private void loadAllProducts(Integer categoryId, String searchText) {
         productGrid.getChildren().clear();
         try {
             List<ProductDetail> allProducts = productDetailService.findAllProductDetails();
+            String lowerSearch = (searchText != null) ? searchText.toLowerCase().trim() : "";
+
             for (ProductDetail detail : allProducts) {
                 if (detail.getQtyOnHand() > 0 && !detail.isExpired()) {
                     Product product = productService.findProduct(detail.getProductCode());
-                    if (categoryId == null || (product != null && product.getCategory() != null
-                            && product.getCategory().getId().equals(categoryId))) {
-                        productGrid.getChildren().add(createProductTile(detail));
+                    
+                    // Filter by category
+                    if (categoryId != null && (product == null || product.getCategory() == null || !product.getCategory().getId().equals(categoryId))) {
+                        continue;
                     }
+
+                    // Filter by search text (keyword or barcode)
+                    if (!lowerSearch.isEmpty()) {
+                        boolean matchesBarcode = detail.getCode().toLowerCase().contains(lowerSearch) || 
+                                               (detail.getBarcode() != null && detail.getBarcode().toLowerCase().contains(lowerSearch));
+                        boolean matchesDescription = product != null && product.getDescription().toLowerCase().contains(lowerSearch);
+                        
+                        if (!matchesBarcode && !matchesDescription) {
+                            continue;
+                        }
+                    }
+
+                    productGrid.getChildren().add(createProductTile(detail));
                 }
             }
         } catch (Exception e) {
@@ -330,6 +350,11 @@ public class PlaceOrderFormController extends BaseController {
         txtBarcode.textProperty().addListener((observable, oldValue, newValue) -> {
             if (isUpdatingBarcodeProgrammatically)
                 return;
+            
+            // Always filter the grid based on search/barcode input
+            loadAllProducts(activeCategoryId, newValue);
+
+            // Auto-load product if exact barcode match of standard length (scanner behavior)
             if (newValue != null && (newValue.length() >= 13 || newValue.length() == 8)) {
                 loadProduct(null);
             }
@@ -389,9 +414,39 @@ public class PlaceOrderFormController extends BaseController {
                 txtQty.requestFocus();
             } else {
                 imgProduct.setImage(null);
-                // Try searching by description/barcode in Product table
-                // This is a bit complex as we need a batch (ProductDetail) to sell
-                // For now, let's just use the barcode scanner primarily
+                // Try searching by description if barcode/code not found
+                List<ProductDetail> allProducts = productDetailService.findAllProductDetails();
+                for (ProductDetail detail : allProducts) {
+                    Product p = productService.findProduct(detail.getProductCode());
+                    if (p != null && p.getDescription().toLowerCase().trim().equalsIgnoreCase(barcode.toLowerCase().trim())) {
+                        if (detail.getQtyOnHand() > 0 && !detail.isExpired()) {
+                            // Found a matching product description with an active batch!
+                            isUpdatingBarcodeProgrammatically = true;
+                            txtBarcode.setText(detail.getCode());
+                            isUpdatingBarcodeProgrammatically = false;
+                            
+                            txtDescription.setText(p.getDescription());
+                            txtSellingPrice.setText(String.valueOf(detail.getSellingPrice()));
+                            txtQtyOnHand.setText(String.valueOf(detail.getQtyOnHand()));
+                            txtDiscount.setText("0.0");
+                            currentShowPrice = detail.getShowPrice();
+                            
+                            if (detail.getImage() != null && !detail.getImage().isEmpty()) {
+                                try {
+                                    String base64Image = detail.getImage();
+                                    if (base64Image.contains(",")) {
+                                        base64Image = base64Image.split(",")[1];
+                                    }
+                                    byte[] imageBytes = Base64.getDecoder().decode(base64Image);
+                                    imgProduct.setImage(new Image(new ByteArrayInputStream(imageBytes)));
+                                } catch (Exception e) {}
+                            }
+                            
+                            txtQty.requestFocus();
+                            return;
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
             new Alert(Alert.AlertType.ERROR, "Load error: " + e.getMessage()).show();
@@ -501,7 +556,11 @@ public class PlaceOrderFormController extends BaseController {
                 pointsToUse = availableLoyaltyPoints;
                 txtPointsToUse.setText(String.valueOf(pointsToUse));
             }
-            double finalTotal = total - pointsToUse;
+            double discountPercentage = txtBillDiscount.getText().isEmpty() ? 0.0
+                    : Double.parseDouble(txtBillDiscount.getText());
+
+            double discountAmount = total * (discountPercentage / 100.0);
+            double finalTotal = total - pointsToUse - discountAmount;
             if (finalTotal < 0) {
                 finalTotal = 0;
             }
@@ -535,13 +594,19 @@ public class PlaceOrderFormController extends BaseController {
             double totalCost = tms.stream().mapToDouble(CartTm::getTotalCost).sum();
             double pointsToUse = txtPointsToUse.getText().isEmpty() ? 0.0
                     : Double.parseDouble(txtPointsToUse.getText());
-            
+
             if (pointsToUse > availableLoyaltyPoints) {
                 new Alert(Alert.AlertType.WARNING, "Not enough loyalty points available.").show();
                 return;
             }
-            
-            double finalTotal = totalCost - pointsToUse;
+
+            double discountPercentageValue = txtBillDiscount.getText().isEmpty() ? 0.0
+                    : Double.parseDouble(txtBillDiscount.getText());
+
+            double billDiscountAmount = totalCost * (discountPercentageValue / 100.0);
+            double finalTotal = totalCost - pointsToUse - billDiscountAmount;
+            if (finalTotal < 0) finalTotal = 0;
+
             String paymentMethod = cmbPaymentMethod.getValue();
             String paidText = txtCustomerPaid.getText().trim();
 
@@ -573,7 +638,7 @@ public class PlaceOrderFormController extends BaseController {
                 return;
             }
 
-            double orderTotalDiscount = tms.stream().mapToDouble(tm -> tm.getDiscount() * tm.getQty()).sum();
+            double orderTotalDiscount = tms.stream().mapToDouble(tm -> tm.getDiscount() * tm.getQty()).sum() + billDiscountAmount;
 
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setIssuedDate(LocalDateTime.now());
@@ -687,6 +752,7 @@ public class PlaceOrderFormController extends BaseController {
         selectedCustomerId = null;
         availableLoyaltyPoints = 0.0;
         txtPointsToUse.clear();
+        txtBillDiscount.clear();
         txtPointsToEarn.setText("+0.0");
         txtCustomerLoyaltyPoints.setText("Aval: 0");
     }
