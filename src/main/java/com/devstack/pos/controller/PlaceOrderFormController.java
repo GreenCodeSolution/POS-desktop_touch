@@ -535,7 +535,7 @@ public class PlaceOrderFormController extends BaseController {
             orderDetail.setCustomerName(txtName.getText());
             orderDetail.setOperatorEmail(UserSessionData.email);
             orderDetail.setPaymentMethod(cmbPaymentMethod.getValue());
-            if ("CREDIT".equalsIgnoreCase(cmbPaymentMethod.getValue())) {
+            if ("CREDIT".equalsIgnoreCase(cmbPaymentMethod.getValue()) || "CHEQUE".equalsIgnoreCase(cmbPaymentMethod.getValue())) {
                 orderDetail.setPaymentStatus("PENDING");
             } else {
                 orderDetail.setPaymentStatus("PAID");
