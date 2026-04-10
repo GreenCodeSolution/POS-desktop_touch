@@ -16,7 +16,7 @@
     -fx-max-width: 80.0;
     -fx-alignment: TOP_CENTER;
     -fx-padding: 30 0;
-    -fx-spacing: 25;
+    -fx-spacing: 10;
     -fx-border-color: #e2e8f0;
     -fx-border-width: 0 1 0 0;
 }
@@ -38,8 +38,16 @@
 }
 
 .sidebar-icon-btn.active {
-    -fx-background-color: #6366f1;
-    -fx-text-fill: white;
+    -fx-background-color: rgba(99, 102, 241, 0.12);
+    -fx-text-fill: rgba(0, 123, 255, 0.15);
+    -fx-border-color: rgba(0, 123, 255, 0.15);
+    -fx-border-width: 0 0 0 4;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0 16 16 0;
+}
+
+.sidebar-icon-btn:pressed {
+    -fx-background-color: rgba(99, 102, 241, 0.2);
 }
 
 /* ScrollPane */
