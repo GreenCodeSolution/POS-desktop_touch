@@ -121,3 +121,41 @@
     -fx-font-weight: bold;
     -fx-text-fill: #6366f1;
 }
+
+/* Professional Category Selectors */
+.category-btn {
+    -fx-background-color: white;
+    -fx-text-fill: #64748b;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 12 28;
+    -fx-background-radius: 30;
+    -fx-cursor: hand;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 30;
+}
+
+.category-btn:hover {
+    -fx-background-color: #f8fafc;
+    -fx-border-color: #6366f1;
+    -fx-text-fill: #6366f1;
+}
+
+.category-btn.active {
+    -fx-background-color: #6366f1;
+    -fx-text-fill: white;
+    -fx-border-color: #6366f1;
+    -fx-effect: dropshadow(gaussian, rgba(99, 102, 241, 0.3), 8, 0, 0, 4);
+}
+
+.category-scroll {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0 0 10 0;
+}
+
+.category-scroll .scroll-bar:horizontal {
+    -fx-opacity: 0.3;
+}
