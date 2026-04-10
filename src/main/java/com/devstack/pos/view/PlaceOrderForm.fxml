@@ -87,25 +87,38 @@
                             </children>
                         </VBox>
 
-                        <!-- Cart Items Table (Redesigned for touch) -->
-                        <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 10;">
-                            <children>
-                                <TableView fx:id="tblCart" styleClass="table-view-modern" VBox.vgrow="ALWAYS">
-                                    <columns>
-                                        <TableColumn fx:id="colCode" prefWidth="100.0" text="Code" visible="false"/>
-                                        <TableColumn fx:id="colDesc" prefWidth="150.0" text="Item"/>
-                                        <TableColumn fx:id="colSelPrice" prefWidth="120.0" text="Price"/>
-                                        <TableColumn fx:id="colSelQty" prefWidth="80.0" text="Qty"/>
-                                        <TableColumn fx:id="colSelDisc" prefWidth="100.0" text="Disc" visible="false"/>
-                                        <TableColumn fx:id="colSelTotal" prefWidth="120.0" text="Total"/>
-                                        <TableColumn fx:id="colSelOperation" prefWidth="150.0" text=""/>
-                                    </columns>
-                                    <columnResizePolicy>
-                                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
-                                    </columnResizePolicy>
-                                </TableView>
-                            </children>
-                        </VBox>
+                                <VBox spacing="10" style="-fx-padding: 15 25; -fx-background-color: #f0f7ff; -fx-border-color: #dbeafe; -fx-border-width: 0 0 1 0;">
+                                    <children>
+                                        <HBox alignment="CENTER_LEFT" spacing="10">
+                                            <Text text="Loyalty Points" style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-fill: #1e40af;"/>
+                                            <Region HBox.hgrow="ALWAYS" />
+                                            <Text fx:id="txtCustomerLoyaltyPoints" text="Aval: 0.0" style="-fx-fill: #1e40af; -fx-font-weight: bold;"/>
+                                        </HBox>
+                                        <HBox spacing="10" alignment="CENTER_LEFT">
+                                            <JFXTextField fx:id="txtPointsToUse" onKeyReleased="#calculateBalance" promptText="Redeem Points" HBox.hgrow="ALWAYS" style="-fx-font-size: 13px;"/>
+                                        </HBox>
+                                    </children>
+                                </VBox>
+
+                                <!-- Cart Items Table -->
+                                <VBox VBox.vgrow="ALWAYS" style="-fx-padding: 10;">
+                                    <children>
+                                        <TableView fx:id="tblCart" styleClass="table-view-modern" VBox.vgrow="ALWAYS">
+                                            <columns>
+                                                <TableColumn fx:id="colCode" prefWidth="100.0" text="Code" visible="false"/>
+                                                <TableColumn fx:id="colDesc" prefWidth="150.0" text="Item"/>
+                                                <TableColumn fx:id="colSelPrice" prefWidth="120.0" text="Price"/>
+                                                <TableColumn fx:id="colSelQty" prefWidth="80.0" text="Qty"/>
+                                                <TableColumn fx:id="colSelDisc" prefWidth="100.0" text="Disc" visible="false"/>
+                                                <TableColumn fx:id="colSelTotal" prefWidth="120.0" text="Total"/>
+                                                <TableColumn fx:id="colSelOperation" prefWidth="150.0" text=""/>
+                                            </columns>
+                                            <columnResizePolicy>
+                                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                                            </columnResizePolicy>
+                                        </TableView>
+                                    </children>
+                                </VBox>
 
                         <!-- Payment & Summary -->
                         <VBox spacing="15" style="-fx-padding: 25; -fx-background-color: #ffffff; -fx-border-color: #f1f5f9; -fx-border-width: 1 0 0 0;">
@@ -120,6 +133,12 @@
                                     <Text text="Payment Method" style="-fx-fill: #64748b; -fx-font-size: 14px;"/>
                                     <JFXComboBox fx:id="cmbPaymentMethod" maxWidth="Infinity" style="-fx-font-size: 14px; -fx-pref-height: 40;"/>
                                 </VBox>
+
+                                <HBox alignment="CENTER_LEFT">
+                                    <Text text="Points to Earn" style="-fx-fill: #14b8a6; -fx-font-size: 14px;"/>
+                                    <Region HBox.hgrow="ALWAYS" />
+                                    <Text fx:id="txtPointsToEarn" text="+0.0" style="-fx-font-size: 15px; -fx-font-weight: bold; -fx-fill: #14b8a6;"/>
+                                </HBox>
 
                                 <HBox spacing="10">
                                     <children>
@@ -148,8 +167,5 @@
             </children>
         </GridPane>
         
-        <!-- Invisible fields for loyalty points logic compatibility -->
-        <Text fx:id="txtCustomerLoyaltyPoints" visible="false" managed="false"/>
-        <JFXTextField fx:id="txtPointsToUse" visible="false" managed="false"/>
     </children>
 </AnchorPane>

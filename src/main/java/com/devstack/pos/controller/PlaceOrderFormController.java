@@ -61,6 +61,7 @@ public class PlaceOrderFormController extends BaseController {
     public JFXComboBox<String> cmbPaymentMethod;
     public Text txtCustomerLoyaltyPoints;
     public JFXTextField txtPointsToUse;
+    public Text txtPointsToEarn;
     public ImageView imgProduct;
     public FlowPane productGrid;
     public HBox categoryPane;
@@ -505,6 +506,17 @@ public class PlaceOrderFormController extends BaseController {
                 finalTotal = 0;
             }
             txtTotal.setText(String.format("%.2f /=", finalTotal));
+            
+            // Calculate points to earn
+            double rate = 100.0;
+            try {
+                SystemSettings settings = systemSettingsService.getSystemSettings();
+                if (settings != null && settings.getLoyaltyPointsRate() != null && settings.getLoyaltyPointsRate() > 0) {
+                    rate = settings.getLoyaltyPointsRate();
+                }
+            } catch (Exception e) {}
+            double pointsEarned = finalTotal / rate;
+            txtPointsToEarn.setText(String.format("+%.1f", pointsEarned));
 
             double paid = txtCustomerPaid.getText().isEmpty() ? 0.0 : Double.parseDouble(txtCustomerPaid.getText());
             txtBalance.setText(String.format("%.2f /=", (paid - finalTotal)));
@@ -639,6 +651,7 @@ public class PlaceOrderFormController extends BaseController {
         selectedCustomerId = null;
         availableLoyaltyPoints = 0.0;
         txtPointsToUse.clear();
+        txtPointsToEarn.setText("+0.0");
         txtCustomerLoyaltyPoints.setText("Aval: 0");
     }
 
