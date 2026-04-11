@@ -69,7 +69,7 @@ public class PlaceOrderFormController extends BaseController {
 
     private Long selectedCustomerId = null;
     private double availableLoyaltyPoints = 0.0;
-    private String lastCompletedReceiptPath = null; // Store receipt path for printing
+    private Long lastCompletedOrderId = null; // Store order ID for printing
     private final CustomerService customerService;
     private final ProductDetailService productDetailService;
     private final ProductService productService;
@@ -89,7 +89,7 @@ public class PlaceOrderFormController extends BaseController {
             tms.clear();
         }
         selectedCustomerId = null;
-        lastCompletedReceiptPath = null;
+        lastCompletedOrderId = null;
 
         initializeSidebar();
 
@@ -215,18 +215,21 @@ public class PlaceOrderFormController extends BaseController {
             for (ProductDetail detail : allProducts) {
                 if (detail.getQtyOnHand() > 0 && !detail.isExpired()) {
                     Product product = productService.findProduct(detail.getProductCode());
-                    
+
                     // Filter by category
-                    if (categoryId != null && (product == null || product.getCategory() == null || !product.getCategory().getId().equals(categoryId))) {
+                    if (categoryId != null && (product == null || product.getCategory() == null
+                            || !product.getCategory().getId().equals(categoryId))) {
                         continue;
                     }
 
                     // Filter by search text (keyword or barcode)
                     if (!lowerSearch.isEmpty()) {
-                        boolean matchesBarcode = detail.getCode().toLowerCase().contains(lowerSearch) || 
-                                               (detail.getBarcode() != null && detail.getBarcode().toLowerCase().contains(lowerSearch));
-                        boolean matchesDescription = product != null && product.getDescription().toLowerCase().contains(lowerSearch);
-                        
+                        boolean matchesBarcode = detail.getCode().toLowerCase().contains(lowerSearch) ||
+                                (detail.getBarcode() != null
+                                        && detail.getBarcode().toLowerCase().contains(lowerSearch));
+                        boolean matchesDescription = product != null
+                                && product.getDescription().toLowerCase().contains(lowerSearch);
+
                         if (!matchesBarcode && !matchesDescription) {
                             continue;
                         }
@@ -350,11 +353,12 @@ public class PlaceOrderFormController extends BaseController {
         txtBarcode.textProperty().addListener((observable, oldValue, newValue) -> {
             if (isUpdatingBarcodeProgrammatically)
                 return;
-            
+
             // Always filter the grid based on search/barcode input
             loadAllProducts(activeCategoryId, newValue);
 
-            // Auto-load product if exact barcode match of standard length (scanner behavior)
+            // Auto-load product if exact barcode match of standard length (scanner
+            // behavior)
             if (newValue != null && (newValue.length() >= 13 || newValue.length() == 8)) {
                 loadProduct(null);
             }
@@ -418,19 +422,20 @@ public class PlaceOrderFormController extends BaseController {
                 List<ProductDetail> allProducts = productDetailService.findAllProductDetails();
                 for (ProductDetail detail : allProducts) {
                     Product p = productService.findProduct(detail.getProductCode());
-                    if (p != null && p.getDescription().toLowerCase().trim().equalsIgnoreCase(barcode.toLowerCase().trim())) {
+                    if (p != null
+                            && p.getDescription().toLowerCase().trim().equalsIgnoreCase(barcode.toLowerCase().trim())) {
                         if (detail.getQtyOnHand() > 0 && !detail.isExpired()) {
                             // Found a matching product description with an active batch!
                             isUpdatingBarcodeProgrammatically = true;
                             txtBarcode.setText(detail.getCode());
                             isUpdatingBarcodeProgrammatically = false;
-                            
+
                             txtDescription.setText(p.getDescription());
                             txtSellingPrice.setText(String.valueOf(detail.getSellingPrice()));
                             txtQtyOnHand.setText(String.valueOf(detail.getQtyOnHand()));
                             txtDiscount.setText("0.0");
                             currentShowPrice = detail.getShowPrice();
-                            
+
                             if (detail.getImage() != null && !detail.getImage().isEmpty()) {
                                 try {
                                     String base64Image = detail.getImage();
@@ -439,9 +444,10 @@ public class PlaceOrderFormController extends BaseController {
                                     }
                                     byte[] imageBytes = Base64.getDecoder().decode(base64Image);
                                     imgProduct.setImage(new Image(new ByteArrayInputStream(imageBytes)));
-                                } catch (Exception e) {}
+                                } catch (Exception e) {
+                                }
                             }
-                            
+
                             txtQty.requestFocus();
                             return;
                         }
@@ -565,15 +571,17 @@ public class PlaceOrderFormController extends BaseController {
                 finalTotal = 0;
             }
             txtTotal.setText(String.format("%.2f /=", finalTotal));
-            
+
             // Calculate points to earn
             double rate = 100.0;
             try {
                 SystemSettings settings = systemSettingsService.getSystemSettings();
-                if (settings != null && settings.getLoyaltyPointsRate() != null && settings.getLoyaltyPointsRate() > 0) {
+                if (settings != null && settings.getLoyaltyPointsRate() != null
+                        && settings.getLoyaltyPointsRate() > 0) {
                     rate = settings.getLoyaltyPointsRate();
                 }
-            } catch (Exception e) {}
+            } catch (Exception e) {
+            }
             double pointsEarned = finalTotal / rate;
             txtPointsToEarn.setText(String.format("+%.1f", pointsEarned));
 
@@ -605,7 +613,8 @@ public class PlaceOrderFormController extends BaseController {
 
             double billDiscountAmount = totalCost * (discountPercentageValue / 100.0);
             double finalTotal = totalCost - pointsToUse - billDiscountAmount;
-            if (finalTotal < 0) finalTotal = 0;
+            if (finalTotal < 0)
+                finalTotal = 0;
 
             String paymentMethod = cmbPaymentMethod.getValue();
             String paidText = txtCustomerPaid.getText().trim();
@@ -620,7 +629,9 @@ public class PlaceOrderFormController extends BaseController {
                 try {
                     double paidAmount = Double.parseDouble(paidText);
                     if (paidAmount < finalTotal) {
-                        new Alert(Alert.AlertType.WARNING, "Insufficient payment. Amount must be at least " + String.format("%.2f", finalTotal)).show();
+                        new Alert(Alert.AlertType.WARNING,
+                                "Insufficient payment. Amount must be at least " + String.format("%.2f", finalTotal))
+                                .show();
                         txtCustomerPaid.requestFocus();
                         return;
                     }
@@ -631,7 +642,8 @@ public class PlaceOrderFormController extends BaseController {
                 }
             }
 
-            double orderTotalDiscount = tms.stream().mapToDouble(tm -> tm.getDiscount() * tm.getQty()).sum() + billDiscountAmount;
+            double orderTotalDiscount = tms.stream().mapToDouble(tm -> tm.getDiscount() * tm.getQty()).sum()
+                    + billDiscountAmount;
 
             OrderDetail orderDetail = new OrderDetail();
             orderDetail.setIssuedDate(LocalDateTime.now());
@@ -641,7 +653,8 @@ public class PlaceOrderFormController extends BaseController {
             orderDetail.setCustomerName(txtName.getText());
             orderDetail.setOperatorEmail(UserSessionData.email);
             orderDetail.setPaymentMethod(cmbPaymentMethod.getValue());
-            if ("CREDIT".equalsIgnoreCase(cmbPaymentMethod.getValue()) || "CHEQUE".equalsIgnoreCase(cmbPaymentMethod.getValue())) {
+            if ("CREDIT".equalsIgnoreCase(cmbPaymentMethod.getValue())
+                    || "CHEQUE".equalsIgnoreCase(cmbPaymentMethod.getValue())) {
                 orderDetail.setPaymentStatus("PENDING");
             } else {
                 orderDetail.setPaymentStatus("PAID");
@@ -702,7 +715,7 @@ public class PlaceOrderFormController extends BaseController {
                 productDetailService.reduceStock(tm.getCode(), tm.getQty());
             }
 
-            lastCompletedReceiptPath = pdfReportService.generateBillReceipt(savedOrder.getCode());
+            String lastCompletedReceiptPath = pdfReportService.generateBillReceipt(savedOrder.getCode());
             new Alert(Alert.AlertType.CONFIRMATION, "Order Completed!\nPDF: " + lastCompletedReceiptPath).show();
 
             btnPrint.setDisable(false);
@@ -719,13 +732,25 @@ public class PlaceOrderFormController extends BaseController {
 
     public void btnPrintReceipt(ActionEvent actionEvent) {
         try {
-            if (lastCompletedReceiptPath == null) {
-                new Alert(Alert.AlertType.WARNING, "No order to print.").show();
+            if (lastCompletedOrderId == null) {
+                new Alert(Alert.AlertType.WARNING, "No order to print! Please complete an order first.").show();
                 return;
             }
-            receiptPrinter.printBill(lastCompletedReceiptPath);
+
+            // Generate plain text receipt for thermal printer
+            String receiptText = pdfReportService.generatePlainTextReceipt(lastCompletedOrderId);
+
+            // Print receipt directly to thermal printer using ESC/POS commands
+            boolean printed = receiptPrinter.printRawText(receiptText);
+
+            if (printed) {
+                new Alert(Alert.AlertType.INFORMATION, "Receipt printed successfully!").show();
+            } else {
+                new Alert(Alert.AlertType.WARNING, "Printing failed. Please check printer connection.").show();
+            }
         } catch (Exception e) {
-            new Alert(Alert.AlertType.ERROR, "Print error: " + e.getMessage()).show();
+            e.printStackTrace();
+            new Alert(Alert.AlertType.ERROR, "Error printing receipt: " + e.getMessage()).show();
         }
     }
 

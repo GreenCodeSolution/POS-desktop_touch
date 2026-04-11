@@ -25,31 +25,32 @@ import java.nio.charset.StandardCharsets;
 import java.text.AttributedString;
 import java.util.ArrayList;
 import java.util.List;
+import javax.imageio.ImageIO;
 
 /**
  * Utility class for receipt printing and cash drawer operations
  */
 @Component
 public class ReceiptPrinter {
-    
+
     // ESC/POS command to open cash drawer
     // ESC = 0x1B, p = 0x70, m = 0x00, t1 = 0x19 (25ms), t2 = 0xFA (250ms)
-    private static final byte[] OPEN_DRAWER_COMMAND = {0x1B, 0x70, 0x00, 0x19, (byte) 0xFA};
-    
+    private static final byte[] OPEN_DRAWER_COMMAND = { 0x1B, 0x70, 0x00, 0x19, (byte) 0xFA };
+
     // ESC/POS command to cut paper (GS V m)
     // GS = 0x1D, V = 0x56, m = 0x00 (full cut) or 0x01 (partial cut)
-    private static final byte[] CUT_PAPER_COMMAND = {0x1D, 0x56, 0x00};
-    
+    private static final byte[] CUT_PAPER_COMMAND = { 0x1D, 0x56, 0x00 };
+
     // Partial cut command (most compatible with XPrinter XP-Q80K)
     // GS V 1 = partial cut (leaves small connection for easy tear)
-    private static final byte[] PARTIAL_CUT_COMMAND = {0x1D, 0x56, 0x01};
-    
+    private static final byte[] PARTIAL_CUT_COMMAND = { 0x1D, 0x56, 0x01 };
+
     // Feed paper before cutting (LF = line feed, ESC d n = feed n lines)
     private static final byte[] FEED_AND_CUT_COMMAND = {
-        0x1B, 0x64, 0x05,  // ESC d 5 = feed 5 lines
-        0x1D, 0x56, 0x01   // GS V 1 = partial cut
+            0x1B, 0x64, 0x05, // ESC d 5 = feed 5 lines
+            0x1D, 0x56, 0x01 // GS V 1 = partial cut
     };
-    
+
     /**
      * Opens the cash drawer by sending ESC/POS command to the default printer
      * This works with most POS thermal printers that have a cash drawer connected
@@ -58,32 +59,32 @@ public class ReceiptPrinter {
         try {
             // Find the default print service
             PrintService defaultPrintService = PrintServiceLookup.lookupDefaultPrintService();
-            
+
             if (defaultPrintService == null) {
                 System.err.println("No default printer found. Cash drawer cannot be opened.");
                 return;
             }
-            
+
             // Create a Doc with the ESC/POS command
             DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
             Doc doc = new SimpleDoc(OPEN_DRAWER_COMMAND, flavor, null);
-            
+
             // Create print job
             DocPrintJob job = defaultPrintService.createPrintJob();
             PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
-            
+
             // Send the command to open the drawer
             job.print(doc, attributes);
-            
+
             System.out.println("Cash drawer open command sent successfully.");
-            
+
         } catch (PrintException e) {
             System.err.println("Error opening cash drawer: " + e.getMessage());
             e.printStackTrace();
             // Don't show error to user as this is not critical
         }
     }
-    
+
     /**
      * Opens a PDF receipt file with the default PDF viewer
      * This simulates printing by opening the PDF for the user
@@ -93,11 +94,11 @@ public class ReceiptPrinter {
     public void openReceiptPDF(String pdfFilePath) {
         try {
             File pdfFile = new File(pdfFilePath);
-            
+
             if (!pdfFile.exists()) {
                 throw new IOException("PDF file not found: " + pdfFilePath);
             }
-            
+
             // Open the PDF with the default application
             if (Desktop.isDesktopSupported()) {
                 Desktop desktop = Desktop.getDesktop();
@@ -110,15 +111,15 @@ public class ReceiptPrinter {
             } else {
                 System.err.println("Desktop is not supported on this platform");
             }
-            
+
         } catch (IOException e) {
             System.err.println("Error opening receipt PDF: " + e.getMessage());
             e.printStackTrace();
-            new Alert(Alert.AlertType.ERROR, 
-                "Could not open receipt PDF. Please check: " + pdfFilePath).show();
+            new Alert(Alert.AlertType.ERROR,
+                    "Could not open receipt PDF. Please check: " + pdfFilePath).show();
         }
     }
-    
+
     /**
      * Prints directly to thermal printer using raw ESC/POS commands
      * For Sinhala text, converts text to image first, then to ESC/POS raster format
@@ -134,19 +135,20 @@ public class ReceiptPrinter {
             if (printer == null) {
                 printer = PrintServiceLookup.lookupDefaultPrintService();
             }
-            
+
             if (printer == null) {
                 System.err.println("No printer found.");
                 return false;
             }
-            
-            System.out.println("Printing to: " + printer.getName());
-            
-            // Check if text contains Sinhala characters (Unicode range 0D80-0DFF) or other Unicode
+
+            System.out.println("Using Printer: [" + printer.getName() + "]");
+
+            // Check if text contains Sinhala characters (Unicode range 0D80-0DFF) or other
+            // Unicode
             // Always use image-based approach for any Unicode text (Sinhala, Tamil, etc.)
             // ESC/POS UTF-8 does NOT work reliably on most thermal printers
             boolean containsUnicode = containsSinhalaText(receiptText) || containsUnicodeText(receiptText);
-            
+
             byte[] escposData;
             if (containsUnicode) {
                 // Use image-based approach for Unicode text (Sinhala, etc.)
@@ -156,28 +158,90 @@ public class ReceiptPrinter {
                 // Use direct text approach for ASCII-only text
                 escposData = formatReceiptAsESCPOS(receiptText);
             }
-            
-            // Create print job with raw data
+
+            // Mac-specific raw printing fallback using 'lp -o raw'
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("mac")) {
+                try {
+                    System.out.println("Attempting direct raw print via 'lp -o raw' on Mac...");
+                    
+                    String rawPrinterName = printer.getName();
+                    // Mac CUPS uses underscores instead of spaces internally
+                    String lpPrinterName = rawPrinterName.replace(" ", "_");
+                    
+                    System.out.println("Using Printer Name: " + rawPrinterName + " (CUPS Name: " + lpPrinterName + ")");
+                    
+                    // Try to unpause and accept jobs for the printer first
+                    try {
+                        // cupsenable: resumes the printer
+                        new ProcessBuilder("cupsenable", lpPrinterName).start().waitFor();
+                        // cupsaccept: allows the printer to accept new jobs
+                        new ProcessBuilder("cupsaccept", lpPrinterName).start().waitFor();
+                    } catch (Exception e) {
+                        System.err.println("Warning: Could not run cupsenable/cupsaccept: " + e.getMessage());
+                    }
+
+                    File tempFile = File.createTempFile("receipt_", ".bin");
+                    java.nio.file.Files.write(tempFile.toPath(), escposData);
+                    
+                    // Attempt printing with standard lp command
+                    // We try with the underscore name first as it's the standard for CUPS
+                    String[] command = {"lp", "-d", lpPrinterName, "-o", "raw", tempFile.getAbsolutePath()};
+                    Process process = new ProcessBuilder(command).start();
+                    int exitCode = process.waitFor();
+                    
+                    if (exitCode != 0) {
+                        System.out.println("Printing with underscore name failed, retrying with raw name...");
+                        // Fallback to original name if underscores failed (unlikely but safe)
+                        String[] command2 = {"lp", "-d", rawPrinterName, "-o", "raw", tempFile.getAbsolutePath()};
+                        exitCode = new ProcessBuilder(command2).start().waitFor();
+                    }
+                    
+                    if (exitCode == 0) {
+                        System.out.println("Successfully sent raw data to " + lpPrinterName + " via lp -o raw");
+                        tempFile.delete();
+                        return true;
+                    } else {
+                        System.err.println("lp command failed with exit code: " + exitCode);
+                        // Check if printer exists or is unreachable
+                        try {
+                            Process pCheck = new ProcessBuilder("lpstat", "-p", lpPrinterName).start();
+                            java.util.Scanner s = new java.util.Scanner(pCheck.getInputStream()).useDelimiter("\\A");
+                            String status = s.hasNext() ? s.next() : "";
+                            System.err.println("Current Printer Status: " + status);
+                            if (status.contains("disabled") || status.contains("Unable to send data")) {
+                                System.err.println("CRITICAL: Printer is physically disconnected or turned OFF.");
+                            }
+                        } catch (Exception e) {}
+                    }
+                    tempFile.delete();
+                } catch (Exception lpEx) {
+                    System.err.println("lp printing fallback failed, trying Java Print Service: " + lpEx.getMessage());
+                }
+            }
+
+            // Create print job with raw data (Java Print Service - Fallback/Standard)
             DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
             Doc doc = new SimpleDoc(escposData, flavor, null);
             DocPrintJob job = printer.createPrintJob();
             PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
-            
+
             // Print the raw data
             job.print(doc, attributes);
-            
+
             System.out.println("Receipt sent to thermal printer successfully");
             return true;
-            
+
         } catch (Exception e) {
             System.err.println("Error printing raw text: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
-    
+
     /**
      * Checks if text contains Sinhala characters (Unicode range 0D80-0DFF)
+     * 
      * @param text Text to check
      * @return true if Sinhala characters are found
      */
@@ -192,9 +256,10 @@ public class ReceiptPrinter {
         }
         return false;
     }
-    
+
     /**
      * Checks if text contains any Unicode characters beyond ASCII (0-127)
+     * 
      * @param text Text to check
      * @return true if non-ASCII characters are found
      */
@@ -209,9 +274,10 @@ public class ReceiptPrinter {
         }
         return false;
     }
-    
+
     /**
      * Checks if a font is available on the system
+     * 
      * @param fontName Name of the font to check
      * @return true if font is available
      */
@@ -225,9 +291,10 @@ public class ReceiptPrinter {
         }
         return false;
     }
-    
+
     /**
      * Gets the best available font for Sinhala text
+     * 
      * @return Font object for Sinhala text, with fallback to system default
      */
     private Font getSinhalaFont() {
@@ -244,10 +311,11 @@ public class ReceiptPrinter {
             return new Font("Malithi Web", Font.PLAIN, fontSize);
         }
         // Fallback to default font (may show square boxes if Sinhala not supported)
-        System.err.println("Warning: Sinhala font not found. Install 'Noto Sans Sinhala' for proper Sinhala rendering.");
+        System.err
+                .println("Warning: Sinhala font not found. Install 'Noto Sans Sinhala' for proper Sinhala rendering.");
         return new Font(Font.SANS_SERIF, Font.PLAIN, fontSize);
     }
-    
+
     /**
      * Generates ESC/POS raster data from Sinhala receipt text
      * Uses high-resolution rendering (2x) then scales down for better quality
@@ -267,137 +335,137 @@ public class ReceiptPrinter {
         int rightMargin = 10 * scaleFactor;
         // Add safety margin to prevent text overflow
         int maxTextWidth = renderWidth - leftMargin - rightMargin - (10 * scaleFactor);
-        
+
         // Get best available Sinhala font with fallback
         Font sinhalaFont = getSinhalaFont();
         // Scale font for high-resolution rendering
         Font scaledFont = sinhalaFont.deriveFont(sinhalaFont.getSize2D() * scaleFactor);
-        
+
         // Create temporary graphics for measurement
         BufferedImage tempImage = new BufferedImage(renderWidth, 100, BufferedImage.TYPE_INT_RGB);
         Graphics2D tempG = tempImage.createGraphics();
-        
+
         // Set high-quality rendering hints for measurement
         tempG.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         tempG.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         tempG.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         tempG.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-        
+
         tempG.setFont(scaledFont);
         FontMetrics fm = tempG.getFontMetrics(scaledFont);
-        
+
         // Process text lines with proper wrapping
         String[] inputLines = receiptText.split("\n");
         List<String> wrappedLines = new ArrayList<>();
-        
+
         for (String inputLine : inputLines) {
             if (inputLine == null || inputLine.trim().isEmpty()) {
                 wrappedLines.add(""); // Preserve empty lines
                 continue;
             }
-            
+
             // Remove ESC/POS commands from text for rendering
             String cleanLine = removeEscPosCommands(inputLine);
-            
+
             // Wrap text using FontMetrics (simpler and faster than TextLayout)
             List<String> wrapped = wrapTextWithFontMetrics(cleanLine, scaledFont, fm, maxTextWidth);
             wrappedLines.addAll(wrapped);
         }
-        
+
         // Calculate required height based on wrapped lines
         int lineHeight = (int) (fm.getHeight() * 1.15); // Add 15% spacing
         int renderHeight = (wrappedLines.size() * lineHeight) + (padding * 2);
-        
+
         // Ensure minimum height
         if (renderHeight < 100 * scaleFactor) {
             renderHeight = 100 * scaleFactor;
         }
-        
+
         tempG.dispose();
-        
+
         // Create high-resolution image
         BufferedImage highResImage = new BufferedImage(renderWidth, renderHeight, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = highResImage.createGraphics();
-        
+
         // Enable maximum quality rendering for crisp text
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
         g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
         g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
-        
+
         // Fill with white background
         g.setColor(Color.WHITE);
         g.fillRect(0, 0, renderWidth, renderHeight);
-        
+
         // Set black text color
         g.setColor(Color.BLACK);
         g.setFont(scaledFont);
-        
+
         // Draw text line by line using drawString (simpler than TextLayout)
         int y = padding + fm.getAscent();
-        
+
         for (String line : wrappedLines) {
             if (line != null && !line.trim().isEmpty()) {
                 // Use FontMetrics to verify width
                 Rectangle2D bounds = fm.getStringBounds(line, g);
                 if (bounds.getWidth() > maxTextWidth + (5 * scaleFactor)) {
-                    System.err.println("Warning: Text line exceeds bounds by " + 
-                        ((bounds.getWidth() - maxTextWidth) / scaleFactor) + "px");
+                    System.err.println("Warning: Text line exceeds bounds by " +
+                            ((bounds.getWidth() - maxTextWidth) / scaleFactor) + "px");
                 }
-                
+
                 // Draw using drawString - simpler and handles Sinhala well with proper font
                 g.drawString(line, leftMargin, y);
             }
             y += lineHeight;
         }
-        
+
         g.dispose();
-        
+
         // Scale down to target resolution for better quality (anti-aliasing effect)
         int targetHeight = renderHeight / scaleFactor;
         BufferedImage image = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
         Graphics2D scaledG = image.createGraphics();
-        
+
         // Use high-quality scaling
         scaledG.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
         scaledG.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         scaledG.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        
+
         scaledG.drawImage(highResImage, 0, 0, targetWidth, targetHeight, null);
         scaledG.dispose();
-        
+
         // Convert image to ESC/POS raster format
         return convertImageToEscPos(image);
     }
-    
+
     /**
      * Wraps text properly for complex scripts (Sinhala) using FontMetrics
      * Simpler and faster than TextLayout, but still accurate
      * 
-     * @param text Text to wrap
-     * @param font Font to use for measurement
-     * @param fm FontMetrics for accurate measurement
+     * @param text     Text to wrap
+     * @param font     Font to use for measurement
+     * @param fm       FontMetrics for accurate measurement
      * @param maxWidth Maximum width in pixels
      * @return List of wrapped lines
      */
     private List<String> wrapTextWithFontMetrics(String text, Font font, FontMetrics fm, int maxWidth) {
         List<String> lines = new ArrayList<>();
-        
+
         if (text == null || text.isEmpty()) {
             lines.add("");
             return lines;
         }
-        
+
         // Add safety margin to prevent overflow
         int safeMaxWidth = maxWidth - 5;
-        
+
         // Create a temporary graphics context for measurement
         BufferedImage tempImg = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
         Graphics2D tempG = tempImg.createGraphics();
         tempG.setFont(font);
         tempG.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
-        
+
         // Check if text fits in one line
         Rectangle2D bounds = fm.getStringBounds(text, tempG);
         if (bounds.getWidth() <= safeMaxWidth) {
@@ -405,18 +473,18 @@ public class ReceiptPrinter {
             tempG.dispose();
             return lines;
         }
-        
+
         // Text needs wrapping - break into words
         String[] words = text.split("\\s+");
         StringBuilder currentLine = new StringBuilder();
-        
+
         for (String word : words) {
-            String testLine = currentLine.length() > 0 
-                ? currentLine.toString() + " " + word 
-                : word;
-            
+            String testLine = currentLine.length() > 0
+                    ? currentLine.toString() + " " + word
+                    : word;
+
             bounds = fm.getStringBounds(testLine, tempG);
-            
+
             if (bounds.getWidth() <= safeMaxWidth) {
                 // Word fits, add it to current line
                 currentLine = new StringBuilder(testLine);
@@ -439,43 +507,43 @@ public class ReceiptPrinter {
                 }
             }
         }
-        
+
         // Add remaining line
         if (currentLine.length() > 0) {
             lines.add(currentLine.toString());
         }
-        
+
         tempG.dispose();
         return lines.isEmpty() ? List.of("") : lines;
     }
-    
+
     /**
      * Wraps text properly for complex scripts (Sinhala) using TextLayout
      * This ensures accurate width measurement for proper text wrapping
      * 
-     * @param text Text to wrap
-     * @param font Font to use for measurement
-     * @param frc FontRenderContext for accurate measurement
+     * @param text     Text to wrap
+     * @param font     Font to use for measurement
+     * @param frc      FontRenderContext for accurate measurement
      * @param maxWidth Maximum width in pixels
      * @return List of wrapped lines
      */
     private List<String> wrapTextWithTextLayout(String text, Font font, FontRenderContext frc, int maxWidth) {
         List<String> lines = new ArrayList<>();
-        
+
         if (text == null || text.isEmpty()) {
             lines.add("");
             return lines;
         }
-        
+
         // Add safety margin (5px) to prevent overflow
         int safeMaxWidth = maxWidth - 5;
-        
+
         // If text fits in one line, return it
         try {
             AttributedString attrString = new AttributedString(text);
             attrString.addAttribute(TextAttribute.FONT, font);
             TextLayout layout = new TextLayout(attrString.getIterator(), frc);
-            
+
             if (layout.getAdvance() <= safeMaxWidth) {
                 lines.add(text);
                 return lines;
@@ -485,22 +553,22 @@ public class ReceiptPrinter {
             System.err.println("TextLayout measurement failed, using fallback: " + e.getMessage());
             return wrapTextSimple(text, safeMaxWidth);
         }
-        
+
         // Text needs wrapping - break into words and measure each
         // For Sinhala, we need to handle both space-separated and continuous text
         String[] words = text.split("\\s+");
         StringBuilder currentLine = new StringBuilder();
-        
+
         for (String word : words) {
-            String testLine = currentLine.length() > 0 
-                ? currentLine.toString() + " " + word 
-                : word;
-            
+            String testLine = currentLine.length() > 0
+                    ? currentLine.toString() + " " + word
+                    : word;
+
             try {
                 AttributedString attrString = new AttributedString(testLine);
                 attrString.addAttribute(TextAttribute.FONT, font);
                 TextLayout layout = new TextLayout(attrString.getIterator(), frc);
-                
+
                 // Use safeMaxWidth with additional check
                 if (layout.getAdvance() <= safeMaxWidth) {
                     // Word fits, add it to current line
@@ -537,38 +605,39 @@ public class ReceiptPrinter {
                 }
             }
         }
-        
+
         // Add remaining line
         if (currentLine.length() > 0) {
             lines.add(currentLine.toString());
         }
-        
+
         return lines.isEmpty() ? List.of("") : lines;
     }
-    
+
     /**
      * Breaks a long word using FontMetrics (simpler approach)
      * 
-     * @param word Word to break
-     * @param font Font to use
-     * @param fm FontMetrics
+     * @param word     Word to break
+     * @param font     Font to use
+     * @param fm       FontMetrics
      * @param maxWidth Maximum width
-     * @param g Graphics2D for measurement
+     * @param g        Graphics2D for measurement
      * @return List of broken word parts
      */
-    private List<String> breakLongWordWithFontMetrics(String word, Font font, FontMetrics fm, int maxWidth, Graphics2D g) {
+    private List<String> breakLongWordWithFontMetrics(String word, Font font, FontMetrics fm, int maxWidth,
+            Graphics2D g) {
         List<String> parts = new ArrayList<>();
         StringBuilder current = new StringBuilder();
-        
+
         // Add extra safety margin
         int safeMaxWidth = maxWidth - 3;
-        
+
         for (int i = 0; i < word.length(); i++) {
             char ch = word.charAt(i);
             String test = current.toString() + ch;
-            
+
             Rectangle2D bounds = fm.getStringBounds(test, g);
-            
+
             if (bounds.getWidth() <= safeMaxWidth) {
                 current.append(ch);
             } else {
@@ -581,40 +650,40 @@ public class ReceiptPrinter {
                 }
             }
         }
-        
+
         if (current.length() > 0) {
             parts.add(current.toString());
         }
-        
+
         return parts.isEmpty() ? List.of(word) : parts;
     }
-    
+
     /**
      * Breaks a long word that doesn't fit on a line
      * Uses conservative measurement to prevent overflow
      * 
-     * @param word Word to break
-     * @param font Font to use
-     * @param frc FontRenderContext
+     * @param word     Word to break
+     * @param font     Font to use
+     * @param frc      FontRenderContext
      * @param maxWidth Maximum width
      * @return List of broken word parts
      */
     private List<String> breakLongWord(String word, Font font, FontRenderContext frc, int maxWidth) {
         List<String> parts = new ArrayList<>();
         StringBuilder current = new StringBuilder();
-        
+
         // Add extra safety margin for character-by-character breaking
         int safeMaxWidth = maxWidth - 3;
-        
+
         for (int i = 0; i < word.length(); i++) {
             char ch = word.charAt(i);
             String test = current.toString() + ch;
-            
+
             try {
                 AttributedString attrString = new AttributedString(test);
                 attrString.addAttribute(TextAttribute.FONT, font);
                 TextLayout layout = new TextLayout(attrString.getIterator(), frc);
-                
+
                 if (layout.getAdvance() <= safeMaxWidth) {
                     current.append(ch);
                 } else {
@@ -642,43 +711,45 @@ public class ReceiptPrinter {
                 }
             }
         }
-        
+
         if (current.length() > 0) {
             parts.add(current.toString());
         }
-        
+
         return parts.isEmpty() ? List.of(word) : parts;
     }
-    
+
     /**
      * Simple fallback text wrapping method
      * 
-     * @param text Text to wrap
+     * @param text     Text to wrap
      * @param maxWidth Maximum width (rough estimate)
      * @return List of wrapped lines
      */
     private List<String> wrapTextSimple(String text, int maxWidth) {
         List<String> lines = new ArrayList<>();
         int charsPerLine = maxWidth / 10; // Rough estimate: 10 pixels per character
-        
+
         if (text.length() <= charsPerLine) {
             lines.add(text);
             return lines;
         }
-        
+
         int start = 0;
         while (start < text.length()) {
             int end = Math.min(start + charsPerLine, text.length());
             lines.add(text.substring(start, end));
             start = end;
         }
-        
+
         return lines;
     }
-    
+
     /**
      * Removes ESC/POS command sequences from text for image rendering
-     * Less aggressive - only removes actual ESC/POS control sequences, not valid text
+     * Less aggressive - only removes actual ESC/POS control sequences, not valid
+     * text
+     * 
      * @param text Text that may contain ESC/POS commands
      * @return Clean text without ESC/POS commands
      */
@@ -686,11 +757,12 @@ public class ReceiptPrinter {
         if (text == null) {
             return "";
         }
-        // Only remove actual ESC/POS control sequences (ESC/GS followed by specific command bytes)
+        // Only remove actual ESC/POS control sequences (ESC/GS followed by specific
+        // command bytes)
         // Pattern: ESC (0x1B) or GS (0x1D) followed by command character
         // Be more specific to avoid removing valid text like dates or dashes
         String result = text;
-        
+
         // Remove ESC @ (initialize) - ESC 0x40
         result = result.replaceAll("\u001B@", "");
         // Remove ESC ! n (character size) - ESC 0x21 followed by byte
@@ -702,10 +774,10 @@ public class ReceiptPrinter {
         // Remove GS v 0 (raster image) - GS 0x76 followed by mode and parameters
         // This is more complex, so we'll be conservative
         result = result.replaceAll("\u001Dv0[\\x00-\\xFF]{4,}", "");
-        
+
         return result.trim();
     }
-    
+
     /**
      * Converts BufferedImage to ESC/POS raster format
      * Step 2: Convert the image to ESC/POS raster format
@@ -718,23 +790,24 @@ public class ReceiptPrinter {
         int width = image.getWidth();
         int height = image.getHeight();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        
+
         // ESC/POS raster image command: GS v 0 (Print raster image)
         // Format: GS v 0 m xL xH yL yH [raster data]
         // m = 33 (double density mode for better quality on XP-Q80K)
-        // xL/xH = width in bytes (low/high byte), yL/yH = height in pixels (low/high byte)
-        
+        // xL/xH = width in bytes (low/high byte), yL/yH = height in pixels (low/high
+        // byte)
+
         int widthBytes = (width + 7) / 8; // Convert pixels to bytes (8 pixels per byte)
-        
+
         baos.write(0x1D); // GS
-        baos.write('v');  // v
-        baos.write('0');  // 0 = standard raster format
-        baos.write(33);   // m = 33 (double density mode for XP-Q80K)
-        baos.write(widthBytes & 0xFF);        // xL (low byte of width in bytes)
+        baos.write('v'); // v
+        baos.write('0'); // 0 = standard raster format
+        baos.write(33); // m = 33 (double density mode for XP-Q80K)
+        baos.write(widthBytes & 0xFF); // xL (low byte of width in bytes)
         baos.write((widthBytes >> 8) & 0xFF); // xH (high byte of width in bytes)
-        baos.write(height & 0xFF);            // yL (low byte of height in pixels)
-        baos.write((height >> 8) & 0xFF);     // yH (high byte of height in pixels)
-        
+        baos.write(height & 0xFF); // yL (low byte of height in pixels)
+        baos.write((height >> 8) & 0xFF); // yH (high byte of height in pixels)
+
         // Convert image to raster data (1 bit per pixel)
         // Handle both TYPE_INT_RGB and TYPE_BYTE_BINARY
         for (int y = 0; y < height; y++) {
@@ -765,7 +838,7 @@ public class ReceiptPrinter {
                 baos.write(b);
             }
         }
-        
+
         // Add feed and cut commands
         baos.write(0x0A); // LF - line feed
         baos.write(0x0A); // LF
@@ -777,10 +850,10 @@ public class ReceiptPrinter {
         baos.write(0x56); // V
         baos.write(0x41); // A = full cut with feed
         baos.write(0x10); // Feed 16 dots (0x10 = 16)
-        
+
         return baos.toByteArray();
     }
-    
+
     /**
      * Formats receipt text with ESC/POS commands for thermal printer
      * 
@@ -790,21 +863,23 @@ public class ReceiptPrinter {
     private byte[] formatReceiptAsESCPOS(String receiptText) {
         try {
             List<Byte> data = new ArrayList<>();
-            
+
             // ESC/POS initialization
             data.add((byte) 0x1B); // ESC
-            data.add((byte) 0x40); // @  - Initialize printer
-            
-            // Note: Do NOT use UTF-8 encoding directly - most thermal printers don't support it
-            // Convert receipt text to bytes using ISO-8859-1 (Latin-1) for ASCII compatibility
-            // This only works for ASCII text (0-255 range)
-            byte[] textBytes = receiptText.getBytes(StandardCharsets.ISO_8859_1);
-            
-            // Send text bytes (ASCII only - Unicode should use image mode)
+            data.add((byte) 0x40); // @ - Initialize printer
+
+            // Set character code table to PC437 (USA, Standard Europe) - matching ref project
+            data.add((byte) 0x1B); // ESC
+            data.add((byte) 0x74); // t
+            data.add((byte) 0x00); // 0 = PC437
+
+            // Convert receipt text to bytes using US-ASCII for maximum thermal printer compatibility
+            byte[] textBytes = receiptText.getBytes(StandardCharsets.US_ASCII);
+
             for (byte b : textBytes) {
                 data.add(b);
             }
-            
+
             // Feed and cut
             data.add((byte) 0x0A); // LF - line feed
             data.add((byte) 0x0A); // LF
@@ -815,22 +890,22 @@ public class ReceiptPrinter {
             data.add((byte) 0x1D); // GS
             data.add((byte) 0x56); // V
             data.add((byte) 0x01); // partial cut
-            
+
             // Convert List<Byte> to byte[]
             byte[] result = new byte[data.size()];
             for (int i = 0; i < data.size(); i++) {
                 result[i] = data.get(i);
             }
-            
+
             return result;
-            
+
         } catch (Exception e) {
             System.err.println("Error formatting ESC/POS data: " + e.getMessage());
             e.printStackTrace();
             return new byte[0];
         }
     }
-    
+
     /**
      * Prints a PDF file to the default printer by converting to image first
      * Thermal printers handle images much better than PDFs
@@ -841,12 +916,12 @@ public class ReceiptPrinter {
     public boolean printPDF(String pdfFilePath) {
         try {
             File pdfFile = new File(pdfFilePath);
-            
+
             if (!pdfFile.exists()) {
                 System.err.println("PDF file not found: " + pdfFilePath);
                 return false;
             }
-            
+
             // Convert PDF to image first (thermal printers handle images better)
             String imagePath = convertPDFToImage(pdfFilePath);
             if (imagePath != null && new File(imagePath).exists()) {
@@ -860,7 +935,7 @@ public class ReceiptPrinter {
                 }
                 return printed;
             }
-            
+
             // Fallback: try printing PDF directly if image conversion failed
             System.err.println("PDF to image conversion failed, trying direct PDF print...");
             String os = System.getProperty("os.name").toLowerCase();
@@ -869,7 +944,7 @@ public class ReceiptPrinter {
                     return true;
                 }
             }
-            
+
             // Final fallback to Desktop API
             if (Desktop.isDesktopSupported()) {
                 Desktop desktop = Desktop.getDesktop();
@@ -879,40 +954,41 @@ public class ReceiptPrinter {
                     return true;
                 }
             }
-            
+
             return false;
-            
+
         } catch (Exception e) {
             System.err.println("Error printing PDF: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
-    
+
     /**
      * Converts PDF to PNG image using PDFBox (Windows support)
      * Pure Java solution - no external dependencies required
      * 
      * @param pdfFilePath Path to the PDF file
-     * @param imagePath Output image path
+     * @param imagePath   Output image path
      * @return Path to the generated image file, or null if conversion failed
      */
     private String convertPDFToImageUsingPDFBox(String pdfFilePath, String imagePath) {
         try {
             File pdfFile = new File(pdfFilePath);
             PDDocument document = Loader.loadPDF(pdfFile);
-            
+
             // Render first page only
             PDFRenderer pdfRenderer = new PDFRenderer(document);
             // Render at 203 DPI for thermal printer quality (80mm width = ~576 pixels)
             BufferedImage image = pdfRenderer.renderImageWithDPI(0, 203, ImageType.RGB);
-            
-            // Resize to 576 pixels width (80mm thermal paper) while maintaining aspect ratio
+
+            // Resize to 576 pixels width (80mm thermal paper) while maintaining aspect
+            // ratio
             int targetWidth = 576;
             int originalWidth = image.getWidth();
             int originalHeight = image.getHeight();
             int targetHeight = (int) ((double) originalHeight * targetWidth / originalWidth);
-            
+
             // Create resized image
             BufferedImage resizedImage = new BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB);
             Graphics2D g = resizedImage.createGraphics();
@@ -921,22 +997,22 @@ public class ReceiptPrinter {
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             g.drawImage(image, 0, 0, targetWidth, targetHeight, null);
             g.dispose();
-            
+
             // Save as PNG
             javax.imageio.ImageIO.write(resizedImage, "PNG", new File(imagePath));
-            
+
             document.close();
-            
+
             System.out.println("PDF converted to image using PDFBox: " + imagePath);
             return imagePath;
-            
+
         } catch (Exception e) {
             System.err.println("Error converting PDF to image using PDFBox: " + e.getMessage());
             e.printStackTrace();
             return null;
         }
     }
-    
+
     /**
      * Converts PDF to PNG image for better thermal printer compatibility
      * 
@@ -948,7 +1024,7 @@ public class ReceiptPrinter {
             String os = System.getProperty("os.name").toLowerCase();
             String imagePath = pdfFilePath.replace(".pdf", "_print.png");
             List<String> command = new ArrayList<>();
-            
+
             if (os.contains("mac")) {
                 // macOS: Try multiple methods
                 // Method 1: Use qlmanage (built-in, works with PDFs)
@@ -960,11 +1036,11 @@ public class ReceiptPrinter {
                 command.add("-o");
                 command.add(new File(pdfFilePath).getParent()); // output directory
                 command.add(pdfFilePath);
-                
+
                 ProcessBuilder pb = new ProcessBuilder(command);
                 Process process = pb.start();
                 int exitCode = process.waitFor();
-                
+
                 if (exitCode == 0) {
                     // qlmanage creates file with .png extension in the same directory
                     String qlOutputPath = pdfFilePath.replace(".pdf", ".png");
@@ -976,7 +1052,7 @@ public class ReceiptPrinter {
                         return imagePath;
                     }
                 }
-                
+
                 // Method 2: Try pdftoppm if available (from poppler-utils via Homebrew)
                 command.clear();
                 command.add("pdftoppm");
@@ -990,11 +1066,11 @@ public class ReceiptPrinter {
                 command.add("-1"); // maintain aspect ratio
                 command.add(pdfFilePath);
                 command.add(imagePath.replace(".png", ""));
-                
+
                 pb = new ProcessBuilder(command);
                 process = pb.start();
                 exitCode = process.waitFor();
-                
+
                 if (exitCode == 0) {
                     File generatedFile = new File(imagePath.replace(".png", "-1.png"));
                     if (generatedFile.exists()) {
@@ -1003,7 +1079,7 @@ public class ReceiptPrinter {
                         return imagePath;
                     }
                 }
-                
+
                 // Method 3: Try Ghostscript if available
                 command.clear();
                 command.add("gs");
@@ -1017,16 +1093,16 @@ public class ReceiptPrinter {
                 command.add("-dDEVICEWIDTHPOINTS=576"); // 80mm = 576 pixels at 203 DPI
                 command.add("-sOutputFile=" + imagePath);
                 command.add(pdfFilePath);
-                
+
                 pb = new ProcessBuilder(command);
                 process = pb.start();
                 exitCode = process.waitFor();
-                
+
                 if (exitCode == 0 && new File(imagePath).exists()) {
                     System.out.println("PDF converted to image using Ghostscript: " + imagePath);
                     return imagePath;
                 }
-                
+
             } else if (os.contains("linux")) {
                 // Linux: Use convert (ImageMagick) or pdftoppm
                 command.add("pdftoppm");
@@ -1036,11 +1112,11 @@ public class ReceiptPrinter {
                 command.add("300");
                 command.add(pdfFilePath);
                 command.add(imagePath.replace(".png", ""));
-                
+
                 ProcessBuilder pb = new ProcessBuilder(command);
                 Process process = pb.start();
                 int exitCode = process.waitFor();
-                
+
                 if (exitCode == 0) {
                     File generatedFile = new File(imagePath.replace(".png", "-1.png"));
                     if (generatedFile.exists()) {
@@ -1049,7 +1125,7 @@ public class ReceiptPrinter {
                         return imagePath;
                     }
                 }
-                
+
                 // Fallback: try convert (ImageMagick)
                 command.clear();
                 command.add("convert");
@@ -1059,11 +1135,11 @@ public class ReceiptPrinter {
                 command.add("100");
                 command.add(pdfFilePath + "[0]"); // First page only
                 command.add(imagePath);
-                
+
                 pb = new ProcessBuilder(command);
                 process = pb.start();
                 exitCode = process.waitFor();
-                
+
                 if (exitCode == 0 && new File(imagePath).exists()) {
                     System.out.println("PDF converted to image using ImageMagick: " + imagePath);
                     return imagePath;
@@ -1087,39 +1163,39 @@ public class ReceiptPrinter {
                     command.add("-dDEVICEWIDTHPOINTS=576"); // 80mm = 576 pixels at 203 DPI
                     command.add("-sOutputFile=" + imagePath);
                     command.add(pdfFilePath);
-                    
+
                     ProcessBuilder pb = new ProcessBuilder(command);
                     Process process = pb.start();
                     int exitCode = process.waitFor();
-                    
+
                     if (exitCode == 0 && new File(imagePath).exists()) {
                         System.out.println("PDF converted to image using Ghostscript (Windows): " + imagePath);
                         return imagePath;
                     }
-                    
+
                     // Try 32-bit Ghostscript
                     command.set(0, "gswin32c");
                     pb = new ProcessBuilder(command);
                     process = pb.start();
                     exitCode = process.waitFor();
-                    
+
                     if (exitCode == 0 && new File(imagePath).exists()) {
                         System.out.println("PDF converted to image using Ghostscript 32-bit (Windows): " + imagePath);
                         return imagePath;
                     }
                 }
             }
-            
+
             System.err.println("Failed to convert PDF to image. On Windows, PDFBox is used (included).");
             return null;
-            
+
         } catch (Exception e) {
             System.err.println("Error converting PDF to image: " + e.getMessage());
             e.printStackTrace();
             return null;
         }
     }
-    
+
     /**
      * Prints an image file to the printer
      * 
@@ -1130,48 +1206,107 @@ public class ReceiptPrinter {
         try {
             String os = System.getProperty("os.name").toLowerCase();
             List<String> command = new ArrayList<>();
-            
+
             // Try to find XPrinter first
             String printerName = findXPrinterName();
-            
+
             if (os.contains("mac")) {
+                // Try Java Print Service (Raster/Raw) first - most reliable for XPrinter
+                try {
+                    PrintService printer = findXPrinterService();
+                    if (printer == null) {
+                        printer = PrintServiceLookup.lookupDefaultPrintService();
+                    }
+
+                    if (printer != null) {
+                        System.out.println("Mac: Attempting raw raster print to " + printer.getName());
+                        BufferedImage image = ImageIO.read(new File(imagePath));
+                        if (image != null) {
+                            byte[] escposData = convertImageToEscPos(image);
+                            DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
+                            Doc doc = new SimpleDoc(escposData, flavor, null);
+                            DocPrintJob job = printer.createPrintJob();
+                            job.print(doc, new HashPrintRequestAttributeSet());
+                            System.out.println("Mac: Raw raster data sent successfully");
+                            return true;
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("Mac Raster printing failed, falling back to lp: " + e.getMessage());
+                }
+
+                // Fallback to command line (lp)
                 command.add("lp");
-                
+
                 if (printerName != null && !printerName.isEmpty()) {
                     command.add("-d");
                     command.add(printerName);
-                    System.out.println("Printing image to XPrinter: " + printerName);
+                    System.out.println("Printing image to potential thermal printer: " + printerName);
                 }
-                
-                // Options for 80mm thermal printer (XPrinter XP-Q80K)
+
+                // Force raw mode in lp if possible, otherwise generic thermal options
                 command.add("-o");
-                command.add("media=Custom.80x297mm"); // 80mm width thermal paper
+                command.add("raw"); // Try raw mode first for ESC/POS data
                 command.add("-o");
-                command.add("fit-to-page"); // Scale to fit
-                command.add("-o");
-                command.add("scaling=100"); // No scaling
-                command.add("-o");
-                command.add("print-quality=high"); // High quality for better text
+                command.add("media=Custom.80x297mm");
                 command.add(imagePath);
-                
+
             } else if (os.contains("linux")) {
                 command.add("lp");
-                
                 if (printerName != null && !printerName.isEmpty()) {
                     command.add("-d");
                     command.add(printerName);
                     System.out.println("Printing image to XPrinter: " + printerName);
                 }
-                
                 command.add(imagePath);
+            } else if (os.contains("win")) {
+                // Windows: Use Java Print Service with ESC/POS raster data (best for XPrinter)
+                try {
+                    PrintService printer = findXPrinterService();
+                    if (printer == null) {
+                        printer = PrintServiceLookup.lookupDefaultPrintService();
+                    }
+
+                    if (printer == null) {
+                        System.err.println("No printer found on Windows.");
+                        return false;
+                    }
+
+                    System.out.println("Windows: Printing image to " + printer.getName() + " using ESC/POS raster");
+
+                    // Load the generated image
+                    BufferedImage image = ImageIO.read(new File(imagePath));
+                    if (image == null) {
+                        System.err.println("Failed to load image for printing: " + imagePath);
+                        return false;
+                    }
+
+                    // Convert image to ESC/POS raster format (raster images work best on all
+                    // XPrinters)
+                    byte[] escposData = convertImageToEscPos(image);
+
+                    // Send RAW bytes to the printer (AUTOSENSE)
+                    DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
+                    Doc doc = new SimpleDoc(escposData, flavor, null);
+                    DocPrintJob job = printer.createPrintJob();
+                    PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
+                    job.print(doc, attributes);
+
+                    System.out.println("ESC/POS raster data sent to " + printer.getName() + " successfully");
+                    return true;
+                } catch (Exception e) {
+                    System.err.println("Windows image printing failed: " + e.getMessage());
+                    e.printStackTrace();
+                    return false;
+                }
             } else {
                 return false;
             }
-            
+
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             Process process = processBuilder.start();
             int exitCode = process.waitFor();
-            
+
             if (exitCode == 0) {
                 System.out.println("Image sent to printer successfully: " + imagePath);
                 return true;
@@ -1179,14 +1314,14 @@ public class ReceiptPrinter {
                 System.err.println("Image printing failed with exit code: " + exitCode);
                 return false;
             }
-            
+
         } catch (Exception e) {
             System.err.println("Error printing image: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
-    
+
     /**
      * Prints PDF using command-line tools (lp on macOS/Linux)
      * This provides true automatic printing without dialogs
@@ -1198,21 +1333,21 @@ public class ReceiptPrinter {
         try {
             String os = System.getProperty("os.name").toLowerCase();
             List<String> command = new ArrayList<>();
-            
+
             // Try to find XPrinter first
             String printerName = findXPrinterName();
-            
+
             if (os.contains("mac")) {
                 // macOS: use lp command
                 command.add("lp");
-                
+
                 // If XPrinter found, use it; otherwise use default
                 if (printerName != null && !printerName.isEmpty()) {
                     command.add("-d"); // Destination printer
                     command.add(printerName);
                     System.out.println("Using XPrinter: " + printerName);
                 }
-                
+
                 // Add options for thermal printer
                 command.add("-o"); // Options
                 command.add("media=Custom.80x297mm"); // Thermal printer size (optional)
@@ -1225,23 +1360,23 @@ public class ReceiptPrinter {
             } else if (os.contains("linux")) {
                 // Linux: use lp command
                 command.add("lp");
-                
+
                 // If XPrinter found, use it; otherwise use default
                 if (printerName != null && !printerName.isEmpty()) {
                     command.add("-d"); // Destination printer
                     command.add(printerName);
                     System.out.println("Using XPrinter: " + printerName);
                 }
-                
+
                 command.add(pdfFilePath);
             } else {
                 return false; // Not macOS or Linux
             }
-            
+
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             Process process = processBuilder.start();
             int exitCode = process.waitFor();
-            
+
             if (exitCode == 0) {
                 System.out.println("PDF sent to printer via command line: " + pdfFilePath);
                 return true;
@@ -1254,14 +1389,14 @@ public class ReceiptPrinter {
                 }
                 return false;
             }
-            
+
         } catch (Exception e) {
             System.err.println("Error printing PDF via command line: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
-    
+
     /**
      * Fallback method to print using default printer via command line
      */
@@ -1276,17 +1411,17 @@ public class ReceiptPrinter {
                 command.add("fit-to-page");
             }
             command.add(pdfFilePath);
-            
+
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             Process process = processBuilder.start();
             int exitCode = process.waitFor();
-            
+
             return exitCode == 0;
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     /**
      * Finds XPrinter name from available printers
      * 
@@ -1295,28 +1430,28 @@ public class ReceiptPrinter {
     private String findXPrinterName() {
         try {
             PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
-            
+
             for (PrintService service : printServices) {
                 String printerName = service.getName().toLowerCase();
-                if (printerName.contains("xprinter") || printerName.contains("xp-") || 
-                    printerName.contains("xp ")) {
+                if (printerName.contains("xprinter") || printerName.contains("xp-") ||
+                        printerName.contains("xp ")) {
                     return service.getName();
                 }
             }
-            
+
             // If not found, return default printer name
             PrintService defaultPrinter = PrintServiceLookup.lookupDefaultPrintService();
             if (defaultPrinter != null) {
                 return defaultPrinter.getName();
             }
-            
+
         } catch (Exception e) {
             System.err.println("Error finding XPrinter: " + e.getMessage());
         }
-        
+
         return null;
     }
-    
+
     /**
      * Alternative method to print PDF using Java Print Service
      * This is a fallback if Desktop.print() doesn't work
@@ -1324,15 +1459,15 @@ public class ReceiptPrinter {
     private boolean printPDFUsingPrintService(String pdfFilePath) {
         try {
             File pdfFile = new File(pdfFilePath);
-            
+
             // Find all available printers
             PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
-            
+
             if (printServices.length == 0) {
                 System.err.println("No printers found.");
                 return false;
             }
-            
+
             // Try to find XPrinter or use default
             PrintService selectedPrinter = null;
             for (PrintService service : printServices) {
@@ -1343,7 +1478,7 @@ public class ReceiptPrinter {
                     break;
                 }
             }
-            
+
             // If XPrinter not found, use default printer
             if (selectedPrinter == null) {
                 selectedPrinter = PrintServiceLookup.lookupDefaultPrintService();
@@ -1352,7 +1487,7 @@ public class ReceiptPrinter {
                 }
                 System.out.println("Using printer: " + selectedPrinter.getName());
             }
-            
+
             // Read PDF file and create print job
             try (FileInputStream fis = new FileInputStream(pdfFile)) {
                 DocFlavor flavor = DocFlavor.INPUT_STREAM.AUTOSENSE;
@@ -1360,19 +1495,19 @@ public class ReceiptPrinter {
                 DocPrintJob job = selectedPrinter.createPrintJob();
                 PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
                 attributes.add(new Copies(1));
-                
+
                 job.print(doc, attributes);
                 System.out.println("PDF sent to printer successfully: " + selectedPrinter.getName());
                 return true;
             }
-            
+
         } catch (Exception e) {
             System.err.println("Error printing PDF using PrintService: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
     }
-    
+
     /**
      * Sends cut/tear command to thermal printer
      * This cuts the paper after printing the receipt
@@ -1381,37 +1516,37 @@ public class ReceiptPrinter {
         try {
             // Find the default print service or XPrinter
             PrintService printer = findXPrinterService();
-            
+
             if (printer == null) {
                 printer = PrintServiceLookup.lookupDefaultPrintService();
             }
-            
+
             if (printer == null) {
                 System.err.println("No printer found. Cannot send cut command.");
                 return;
             }
-            
+
             // Create a Doc with the ESC/POS cut command
             // Use FEED_AND_CUT_COMMAND for XPrinter XP-Q80K
             DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
             Doc doc = new SimpleDoc(FEED_AND_CUT_COMMAND, flavor, null);
-            
+
             // Create print job
             DocPrintJob job = printer.createPrintJob();
             PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
-            
+
             // Send the cut command
             job.print(doc, attributes);
-            
+
             System.out.println("Cut command sent to printer: " + printer.getName());
-            
+
         } catch (PrintException e) {
             System.err.println("Error sending cut command: " + e.getMessage());
             e.printStackTrace();
             // Don't show error to user as this is not critical
         }
     }
-    
+
     /**
      * Finds XPrinter service from available printers
      * 
@@ -1420,21 +1555,24 @@ public class ReceiptPrinter {
     private PrintService findXPrinterService() {
         try {
             PrintService[] printServices = PrintServiceLookup.lookupPrintServices(null, null);
-            
+
             for (PrintService service : printServices) {
                 String printerName = service.getName().toLowerCase();
-                if (printerName.contains("xprinter") || printerName.contains("xp-") || 
-                    printerName.contains("xp ")) {
+                if (printerName.contains("xprinter") || printerName.contains("xp-") ||
+                        printerName.contains("xp ") || printerName.contains("pos") ||
+                        printerName.contains("thermal") || printerName.contains("80mm") ||
+                        printerName.contains("printer-80") || printerName.contains("usb printer") ||
+                        printerName.contains("printer port")) {
                     return service;
                 }
             }
         } catch (Exception e) {
             System.err.println("Error finding XPrinter service: " + e.getMessage());
         }
-        
+
         return null;
     }
-    
+
     /**
      * Complete bill printing process: prints receipt automatically and cuts paper
      * Cash drawer functionality is disabled as per user requirement
@@ -1444,7 +1582,7 @@ public class ReceiptPrinter {
     public void printBillAndOpenDrawer(String receiptPdfPath) {
         // Print the receipt automatically to default printer (XPrinter)
         boolean printed = printPDF(receiptPdfPath);
-        
+
         if (printed) {
             // Wait for printing to complete, then send cut command
             try {
@@ -1457,11 +1595,11 @@ public class ReceiptPrinter {
             System.err.println("Failed to print automatically. Opening PDF as fallback.");
             openReceiptPDF(receiptPdfPath);
         }
-        
+
         // Cash drawer opening is disabled - user requested to ignore it
         // openCashDrawer();
     }
-    
+
     /**
      * Prints bill automatically without opening cash drawer
      * 
@@ -1470,7 +1608,7 @@ public class ReceiptPrinter {
     public void printBill(String receiptPdfPath) {
         printBillAndOpenDrawer(receiptPdfPath);
     }
-    
+
     /**
      * Checks if a default printer is available
      * 
@@ -1480,7 +1618,7 @@ public class ReceiptPrinter {
         PrintService defaultPrintService = PrintServiceLookup.lookupDefaultPrintService();
         return defaultPrintService != null;
     }
-    
+
     /**
      * Gets the name of the default printer
      * 
@@ -1491,4 +1629,3 @@ public class ReceiptPrinter {
         return defaultPrintService != null ? defaultPrintService.getName() : "No printer";
     }
 }
-

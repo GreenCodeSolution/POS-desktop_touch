@@ -56,6 +56,165 @@ public class PDFReportService {
     private final ReturnOrderItemService returnOrderItemService;
     private final ProductDetailRepository productDetailRepository;
 
+    /**
+     * Generate plain text bill receipt for thermal printer
+     * Matches the format used in the reference project (Kumara Enterprises)
+     * 
+     * @param orderId The ID of the order to generate a receipt for
+     * @return Formatted plain text receipt with ESC/POS commands
+     */
+    public String generatePlainTextReceipt(Long orderId) {
+        try {
+            // Get order details
+            OrderDetail orderDetail = orderDetailService.findOrderDetail(orderId);
+            if (orderDetail == null) {
+                return "Error: Order not found";
+            }
+
+            // Get order items
+            List<OrderItem> orderItems = orderItemService.findByOrderId(orderId);
+
+            // Get system settings
+            SystemSettings settings = systemSettingsService.getSystemSettings();
+
+            StringBuilder receipt = new StringBuilder();
+
+            // Business name (double width/height for emphasis)
+            String businessName = settings.getBusinessName() != null && !settings.getBusinessName().trim().isEmpty()
+                    ? settings.getBusinessName().toUpperCase()
+                    : "KUMARA ENTERPRISES";
+            
+            // ESC ! 0x30 = double width & height
+            receipt.append((char) 0x1B).append("!").append((char) 0x30);
+            receipt.append(centerReceiptText(businessName, 26)).append("\n"); // Half width (26 approx) because scaled
+            receipt.append((char) 0x1B).append("!").append((char) 0x00); // Reset to normal
+
+            // Store Address & Contact (48 chars wide for 80mm)
+            String address = settings.getAddress() != null && !settings.getAddress().trim().isEmpty()
+                    ? settings.getAddress()
+                    : "No 58k Gagabada Rd,\nWewala,Piliyandala";
+            
+            for (String line : address.split("\n")) {
+                receipt.append(centerReceiptText(line, 48)).append("\n");
+            }
+
+            if (settings.getContactNumber() != null && !settings.getContactNumber().trim().isEmpty()) {
+                receipt.append(centerReceiptText(settings.getContactNumber(), 48)).append("\n");
+            } else {
+                receipt.append(centerReceiptText("077 781 5955 / 011 261 3606", 48)).append("\n");
+            }
+
+            receipt.append("\n");
+
+            // Invoice number and date
+            String dateStr = orderDetail.getIssuedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String timeStr = orderDetail.getIssuedDate().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+
+            receipt.append(String.format("Invoice                 %s\n", dateStr));
+            receipt.append(String.format("%-24d%s\n", orderDetail.getCode(), timeStr));
+
+            // Customer name
+            receipt.append(String.format("Customer : %s\n", 
+                    orderDetail.getCustomerName() != null ? orderDetail.getCustomerName() : "Guest"));
+
+            receipt.append(".".repeat(48)).append("\n");
+
+            // Items header
+            // Layout: Item(14) + sp(1) + Price(9) + sp(1) + Qty(5) + sp(1) + Disc(7) + sp(1) + Total(9) = 48
+            receipt.append(String.format("%-14s %9s %5s %7s %9s\n", "Item", "Price", "Qty", "Disc", "Total"));
+            receipt.append(".".repeat(48)).append("\n");
+
+            // Items detail
+            for (OrderItem item : orderItems) {
+                String itemName = item.getProductName();
+                if (itemName.length() > 14) {
+                    itemName = itemName.substring(0, 11) + "...";
+                }
+
+                double discount = item.getDiscountPerUnit() != null ? item.getDiscountPerUnit() : 0.0;
+                Double qty = item.getQuantity();
+                
+                // Format quantity to be exactly 5 characters wide
+                String qtyDisplay;
+                if (qty != null && qty == qty.intValue()) {
+                    qtyDisplay = String.format("x%-3d", qty.intValue());
+                    if (qtyDisplay.length() > 5) qtyDisplay = qtyDisplay.substring(0, 5);
+                    else if (qtyDisplay.length() < 5) qtyDisplay = String.format("%5s", qtyDisplay);
+                } else {
+                    qtyDisplay = String.format("%.1f", qty != null ? qty : 0.0);
+                    if (qtyDisplay.length() > 5) qtyDisplay = qtyDisplay.substring(0, 5);
+                    else if (qtyDisplay.length() < 5) qtyDisplay = String.format("%5s", qtyDisplay);
+                }
+
+                receipt.append(String.format("%-14s %9.2f %5s %7.2f %9.2f\n",
+                        itemName,
+                        item.getUnitPrice(),
+                        qtyDisplay,
+                        discount,
+                        item.getLineTotal()
+                ));
+            }
+
+            receipt.append(".".repeat(48)).append("\n");
+
+            // Totals
+            double subtotal = orderItems.stream().mapToDouble(item ->
+                    item.getUnitPrice() * (item.getQuantity() != null ? item.getQuantity() : 0.0)).sum();
+            double totalDiscount = orderDetail.getDiscount();
+
+            receipt.append(String.format("%-30s %17.2f\n", "Subtotal", subtotal));
+            receipt.append(String.format("%-30s %17.2f\n", "Total Discount", totalDiscount));
+            receipt.append(String.format("%-30s %17.2f\n", "Items Count", (double) orderItems.size()));
+            receipt.append("-".repeat(48)).append("\n");
+            
+            receipt.append(String.format("%-30s %17.2f\n", "TOTAL", orderDetail.getTotalCost()));
+            
+            double customerPaid = orderDetail.getCustomerPaid() != null ? orderDetail.getCustomerPaid() : orderDetail.getTotalCost();
+            receipt.append(String.format("%-30s %17.2f\n", "Customer Paid", customerPaid));
+
+            receipt.append(String.format("%-30s %17s\n", "Payment: " + orderDetail.getPaymentMethod(), ""));
+
+            if ("PAID".equals(orderDetail.getPaymentStatus()) && customerPaid > orderDetail.getTotalCost()) {
+                double change = customerPaid - orderDetail.getTotalCost();
+                receipt.append(String.format("%-30s %17.2f\n", "Change", change));
+            }
+
+            receipt.append("-".repeat(48)).append("\n");
+
+            double balance = orderDetail.getBalance() != null ? orderDetail.getBalance() : 0.00;
+            receipt.append(String.format("%-30s %17.2f\n", "Balance", balance));
+            receipt.append(".".repeat(48)).append("\n");
+
+            // Footer
+            String footer = settings.getFooterMessage() != null && !settings.getFooterMessage().trim().isEmpty()
+                    ? settings.getFooterMessage()
+                    : "Thank you for your business!";
+            receipt.append(centerReceiptText(footer, 48)).append("\n");
+            receipt.append(".".repeat(48)).append("\n");
+
+            // Developer Info (Matching ref project)
+            receipt.append(centerReceiptText("Green Code Solutions", 48)).append("\n");
+            receipt.append(centerReceiptText("078 150 8252 | 076 724 3647", 48)).append("\n");
+
+            return receipt.toString();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Error generating receipt: " + e.getMessage();
+        }
+    }
+
+    /**
+     * Center text for thermal printer (48 characters wide for 80mm)
+     */
+    private String centerReceiptText(String text, int width) {
+        if (text == null || text.length() >= width) {
+            return text != null ? text.substring(0, width) : "";
+        }
+        int padding = (width - text.length()) / 2;
+        return " ".repeat(padding) + text;
+    }
+
     // Initialize fonts on first use to ensure Sinhala support is available
     {
         try {
@@ -822,103 +981,8 @@ public class PDFReportService {
         }
     }
 
-    /**
-     * Generate plain text bill receipt for thermal printer
-     * Matches the format shown in the sample receipt
-     */
-    public String generatePlainTextReceipt(Long orderId) {
-        try {
-            OrderDetail orderDetail = orderDetailService.findOrderDetail(orderId);
-            if (orderDetail == null)
-                return "Error: Order not found";
 
-            List<OrderItem> orderItems = orderItemService.findByOrderId(orderId);
-            SystemSettings settings = systemSettingsService.getSystemSettings();
-            StringBuilder receipt = new StringBuilder();
 
-            String businessName = settings.getBusinessName() != null && !settings.getBusinessName().trim().isEmpty()
-                    ? settings.getBusinessName().toUpperCase()
-                    : "KUMARA ENTERPRISES";
-            receipt.append((char) 0x1B).append("!").append((char) 0x30);
-            receipt.append(centerText(businessName, 26)).append("\n");
-            receipt.append((char) 0x1B).append("!").append((char) 0x00);
-
-            receipt.append(centerText("No 58k Gagabada Rd,", 48)).append("\n");
-            receipt.append(centerText("Wewala,Piliyandala", 48)).append("\n");
-
-            if (settings.getContactNumber() != null && !settings.getContactNumber().trim().isEmpty()) {
-                receipt.append(centerText(settings.getContactNumber(), 48)).append("\n");
-            } else {
-                receipt.append(centerText("077 781 5955 / 011 261 3606", 48)).append("\n");
-            }
-            receipt.append("\n");
-
-            receipt.append(String.format("Invoice                 %s\n",
-                    orderDetail.getIssuedDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))));
-            receipt.append(String.format("%-24d%s\n",
-                    orderDetail.getCode(),
-                    orderDetail.getIssuedDate().format(DateTimeFormatter.ofPattern("HH:mm:ss"))));
-            receipt.append(String.format("Customer : %s\n", orderDetail.getCustomerName()));
-            receipt.append("................................................\n");
-
-            // Header: Item(14) | Price(7) | Qty(8) | Disc(6) | Total(9)
-            receipt.append(String.format("%-14s %7s %8s %6s %9s\n", "Item", "Price", "Qty", "Disc", "Total"));
-            receipt.append("................................................\n");
-
-            receipt.append("................................................\n");
-
-            double sub = orderItems.stream().filter(i -> i != null).mapToDouble(i -> {
-                double vq = i.getQuantity() != null ? i.getQuantity() : 0.0;
-                double vp = i.getUnitPrice() != null ? i.getUnitPrice() : 0.0;
-                return vq * vp;
-            }).sum();
-
-            receipt.append(String.format("%-30s %17.2f\n", "Subtotal", sub));
-            receipt.append(String.format("%-30s %17.2f\n", "Total Discount", orderDetail.getDiscount()));
-            receipt.append(String.format("%-30s %17.2f\n", "Items", (double) orderItems.size()));
-            receipt.append("------------------------------------------------\n");
-            receipt.append(String.format("%-30s %17.2f\n", "TOTAL", orderDetail.getTotalCost()));
-
-            double paid = orderDetail.getCustomerPaid() != null ? orderDetail.getCustomerPaid()
-                    : orderDetail.getTotalCost();
-            receipt.append(String.format("%-30s %17.2f\n", "Customer Paid", paid));
-            receipt.append(String.format("%-30s %17s\n", "Payment: " + orderDetail.getPaymentMethod(), ""));
-
-            if ("PAID".equals(orderDetail.getPaymentStatus()) && paid > orderDetail.getTotalCost()) {
-                receipt.append(String.format("%-30s %17.2f\n", "Change", paid - orderDetail.getTotalCost()));
-            }
-
-            receipt.append("------------------------------------------------\n");
-
-            double bal = orderDetail.getBalance() != null ? orderDetail.getBalance() : 0.0;
-            receipt.append(String.format("%-30s %17.2f\n", "Balance", bal));
-            receipt.append("................................................\n");
-
-            String foot = settings.getFooterMessage() != null && !settings.getFooterMessage().trim().isEmpty()
-                    ? settings.getFooterMessage()
-                    : "Thank you for your business!";
-            receipt.append(centerText(foot, 48)).append("\n");
-            receipt.append("................................................\n");
-            receipt.append(centerText("Green Code Solutions", 48)).append("\n");
-            receipt.append(centerText("078 150 8252 | 076 724 3647", 48)).append("\n");
-
-            return receipt.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "Error: " + e.getMessage();
-        }
-    }
-
-    /**
-     * Center text for thermal printer (48 characters wide for 80mm)
-     */
-    private String centerText(String text, int width) {
-        if (text.length() >= width) {
-            return text.substring(0, width);
-        }
-        int padding = (width - text.length()) / 2;
-        return " ".repeat(padding) + text;
-    }
 
     /**
      * Generate bill receipt PDF for a specific order
