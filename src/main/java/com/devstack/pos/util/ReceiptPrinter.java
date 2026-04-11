@@ -130,7 +130,7 @@ public class ReceiptPrinter {
      */
     public boolean printRawText(String receiptText) {
         try {
-            // Find XPrinter
+            // Find thermal printer
             PrintService printer = findXPrinterService();
             if (printer == null) {
                 printer = PrintServiceLookup.lookupDefaultPrintService();
@@ -141,7 +141,11 @@ public class ReceiptPrinter {
                 return false;
             }
 
-            System.out.println("Using Printer: [" + printer.getName() + "]");
+            System.out.println("Printing to: " + printer.getName());
+
+            // Clear any pending/queued print jobs BEFORE sending new data
+            // This prevents accumulated jobs from flooding the printer when it's plugged in
+            clearPrintQueue(printer.getName());
 
             // Check if text contains Sinhala characters (Unicode range 0D80-0DFF) or other
             // Unicode
@@ -159,68 +163,7 @@ public class ReceiptPrinter {
                 escposData = formatReceiptAsESCPOS(receiptText);
             }
 
-            // Mac-specific raw printing fallback using 'lp -o raw'
-            String os = System.getProperty("os.name").toLowerCase();
-            if (os.contains("mac")) {
-                try {
-                    System.out.println("Attempting direct raw print via 'lp -o raw' on Mac...");
-                    
-                    String rawPrinterName = printer.getName();
-                    // Mac CUPS uses underscores instead of spaces internally
-                    String lpPrinterName = rawPrinterName.replace(" ", "_");
-                    
-                    System.out.println("Using Printer Name: " + rawPrinterName + " (CUPS Name: " + lpPrinterName + ")");
-                    
-                    // Try to unpause and accept jobs for the printer first
-                    try {
-                        // cupsenable: resumes the printer
-                        new ProcessBuilder("cupsenable", lpPrinterName).start().waitFor();
-                        // cupsaccept: allows the printer to accept new jobs
-                        new ProcessBuilder("cupsaccept", lpPrinterName).start().waitFor();
-                    } catch (Exception e) {
-                        System.err.println("Warning: Could not run cupsenable/cupsaccept: " + e.getMessage());
-                    }
-
-                    File tempFile = File.createTempFile("receipt_", ".bin");
-                    java.nio.file.Files.write(tempFile.toPath(), escposData);
-                    
-                    // Attempt printing with standard lp command
-                    // We try with the underscore name first as it's the standard for CUPS
-                    String[] command = {"lp", "-d", lpPrinterName, "-o", "raw", tempFile.getAbsolutePath()};
-                    Process process = new ProcessBuilder(command).start();
-                    int exitCode = process.waitFor();
-                    
-                    if (exitCode != 0) {
-                        System.out.println("Printing with underscore name failed, retrying with raw name...");
-                        // Fallback to original name if underscores failed (unlikely but safe)
-                        String[] command2 = {"lp", "-d", rawPrinterName, "-o", "raw", tempFile.getAbsolutePath()};
-                        exitCode = new ProcessBuilder(command2).start().waitFor();
-                    }
-                    
-                    if (exitCode == 0) {
-                        System.out.println("Successfully sent raw data to " + lpPrinterName + " via lp -o raw");
-                        tempFile.delete();
-                        return true;
-                    } else {
-                        System.err.println("lp command failed with exit code: " + exitCode);
-                        // Check if printer exists or is unreachable
-                        try {
-                            Process pCheck = new ProcessBuilder("lpstat", "-p", lpPrinterName).start();
-                            java.util.Scanner s = new java.util.Scanner(pCheck.getInputStream()).useDelimiter("\\A");
-                            String status = s.hasNext() ? s.next() : "";
-                            System.err.println("Current Printer Status: " + status);
-                            if (status.contains("disabled") || status.contains("Unable to send data")) {
-                                System.err.println("CRITICAL: Printer is physically disconnected or turned OFF.");
-                            }
-                        } catch (Exception e) {}
-                    }
-                    tempFile.delete();
-                } catch (Exception lpEx) {
-                    System.err.println("lp printing fallback failed, trying Java Print Service: " + lpEx.getMessage());
-                }
-            }
-
-            // Create print job with raw data (Java Print Service - Fallback/Standard)
+            // Create print job with raw data
             DocFlavor flavor = DocFlavor.BYTE_ARRAY.AUTOSENSE;
             Doc doc = new SimpleDoc(escposData, flavor, null);
             DocPrintJob job = printer.createPrintJob();
@@ -236,6 +179,37 @@ public class ReceiptPrinter {
             System.err.println("Error printing raw text: " + e.getMessage());
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /**
+     * Clears all pending print jobs from the Windows print queue for the specified printer.
+     * This prevents accumulated jobs from flooding the printer when it's plugged back in.
+     * On Windows, uses 'wmic' or 'net stop/start spooler' approach.
+     *
+     * @param printerName Name of the printer to clear queue for
+     */
+    private void clearPrintQueue(String printerName) {
+        try {
+            String os = System.getProperty("os.name").toLowerCase();
+            if (os.contains("win")) {
+                // Use PowerShell to cancel all print jobs for this specific printer
+                // This is safer than restarting the spooler service
+                try {
+                    ProcessBuilder pb = new ProcessBuilder(
+                            "powershell", "-Command",
+                            "Get-PrintJob -PrinterName '" + printerName + "' -ErrorAction SilentlyContinue | Remove-PrintJob -ErrorAction SilentlyContinue");
+                    pb.redirectErrorStream(true);
+                    Process process = pb.start();
+                    process.waitFor(5, java.util.concurrent.TimeUnit.SECONDS);
+                    System.out.println("Cleared pending print jobs for: " + printerName);
+                } catch (Exception e) {
+                    System.err.println("Could not clear print queue via PowerShell: " + e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            // Non-critical - don't fail if queue clearing fails
+            System.err.println("Error clearing print queue: " + e.getMessage());
         }
     }
 
@@ -1558,11 +1532,11 @@ public class ReceiptPrinter {
 
             for (PrintService service : printServices) {
                 String printerName = service.getName().toLowerCase();
+                // Match XPrinter and POSPrinter names
+                // POSPrinter POS80 is the thermal printer used in this setup
                 if (printerName.contains("xprinter") || printerName.contains("xp-") ||
-                        printerName.contains("xp ") || printerName.contains("pos") ||
-                        printerName.contains("thermal") || printerName.contains("80mm") ||
-                        printerName.contains("printer-80") || printerName.contains("usb printer") ||
-                        printerName.contains("printer port")) {
+                        printerName.contains("xp ") || printerName.contains("posprinter") ||
+                        printerName.contains("pos80")) {
                     return service;
                 }
             }

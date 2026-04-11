@@ -91,6 +91,11 @@ public class PlaceOrderFormController extends BaseController {
         selectedCustomerId = null;
         lastCompletedOrderId = null;
 
+        // Disable print button initially (no order to print yet) - matches Kumara Enterprises
+        if (btnPrint != null) {
+            btnPrint.setDisable(true);
+        }
+
         initializeSidebar();
 
         javafx.application.Platform.runLater(() -> {
@@ -489,6 +494,11 @@ public class PlaceOrderFormController extends BaseController {
 
     private void addToCartInternal(String barcode, String description, double sellingPrice, double qty, double discount,
             double showPrice) {
+        // Disable print button when starting a new order (first item added to empty cart) - matches Kumara
+        if (btnPrint != null && tms.isEmpty()) {
+            btnPrint.setDisable(true);
+            lastCompletedOrderId = null;
+        }
         int n = isExists(barcode);
         if (n == -1) {
             Button btn = new Button("Remove");
@@ -715,18 +725,73 @@ public class PlaceOrderFormController extends BaseController {
                 productDetailService.reduceStock(tm.getCode(), tm.getQty());
             }
 
-            String lastCompletedReceiptPath = pdfReportService.generateBillReceipt(savedOrder.getCode());
-            new Alert(Alert.AlertType.CONFIRMATION, "Order Completed!\nPDF: " + lastCompletedReceiptPath).show();
+            // Store the completed order ID so the Print button can use it - matches Kumara Enterprises
+            lastCompletedOrderId = savedOrder.getCode();
 
-            btnPrint.setDisable(false);
+            // Generate PDF for record keeping (no automatic printing - matches Kumara Enterprises)
+            try {
+                String receiptPath = pdfReportService.generateBillReceipt(savedOrder.getCode());
+                new Alert(Alert.AlertType.CONFIRMATION,
+                        "Order Completed Successfully!\nPDF saved to: " + receiptPath +
+                                "\nClick Print button to print receipt.").show();
+            } catch (Exception receiptEx) {
+                receiptEx.printStackTrace();
+                new Alert(Alert.AlertType.WARNING,
+                        "Order completed but PDF generation failed: " + receiptEx.getMessage()).show();
+            }
+
+            // Enable print button after order is completed - matches Kumara Enterprises
+            if (btnPrint != null) {
+                btnPrint.setDisable(false);
+            }
+
+            // Clear cart and reset UI
             javafx.application.Platform.runLater(() -> {
-                clearFields();
-                tms.clear();
-                tblCart.setItems(tms);
-                setTotal();
+                try {
+                    clearFields();
+                    tms.clear();
+                    tblCart.setItems(tms);
+                    tblCart.refresh();
+                    setTotal();
+                    tblCart.requestLayout();
+                } catch (Exception uiEx) {
+                    uiEx.printStackTrace();
+                    try {
+                        tms.clear();
+                        if (tblCart != null) {
+                            tblCart.setItems(tms);
+                            tblCart.refresh();
+                        }
+                        if (txtTotal != null) txtTotal.setText("0.00 /=");
+                        if (txtBalance != null) txtBalance.setText("0.00 /=");
+                    } catch (Exception resetEx) {
+                        resetEx.printStackTrace();
+                    }
+                }
             });
         } catch (Exception e) {
-            new Alert(Alert.AlertType.ERROR, "Error: " + e.getMessage()).show();
+            e.printStackTrace();
+            // Clear cart even on exception to prevent inconsistent state - matches Kumara Enterprises
+            javafx.application.Platform.runLater(() -> {
+                try {
+                    tms.clear();
+                    if (tblCart != null) {
+                        tblCart.setItems(tms);
+                        tblCart.refresh();
+                        tblCart.requestLayout();
+                    }
+                    setTotal();
+                } catch (Exception clearEx) {
+                    clearEx.printStackTrace();
+                    try {
+                        if (txtTotal != null) txtTotal.setText("0.00 /=");
+                        if (txtBalance != null) txtBalance.setText("0.00 /=");
+                    } catch (Exception finalEx) {
+                        finalEx.printStackTrace();
+                    }
+                }
+            });
+            new Alert(Alert.AlertType.WARNING, "Error completing order: " + e.getMessage()).show();
         }
     }
 
