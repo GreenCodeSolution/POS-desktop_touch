@@ -90,7 +90,7 @@ public class ReturnOrdersFormController extends BaseController {
         initializeSidebar();
 
         // Set table column resize policy
-        tblReturns.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tblReturns.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
         // Initialize date pickers
         dateFrom.setValue(LocalDate.now().minusMonths(1));

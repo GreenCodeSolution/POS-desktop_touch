@@ -3,8 +3,18 @@ package com.devstack.pos;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.IOException;
@@ -14,82 +24,102 @@ public class Initialize extends Application {
     private static Stage primaryStage;
     private static ConfigurableApplicationContext springContext;
 
-    public static void setSpringContext(ConfigurableApplicationContext context) {
-        springContext = context;
-    }
-
     @Override
     public void start(Stage primaryStage) {
         Initialize.primaryStage = primaryStage;
 
-        try {
-            if (springContext == null) {
-                throw new IllegalStateException("Spring context not initialized");
-            }
+        // 1. Show Splash Screen Immediately
+        Stage splashStage = showSplashScreen();
 
-            FXMLLoader loader = new FXMLLoader();
-            var fxmlUrl = getClass().getResource("/com/devstack/pos/view/LoginForm.fxml");
-
-            if (fxmlUrl == null) {
-                System.err.println("FXML file not found");
-                throw new IOException("Could not find LoginForm.fxml");
-            }
-
-            loader.setLocation(fxmlUrl);
-            loader.setControllerFactory(springContext::getBean);
-
-            System.out.println("Loading FXML...");
-            Scene scene = new Scene(loader.load());
-            System.out.println("FXML loaded successfully");
-
-            // Load CSS
+        // 2. Start Spring Boot in a background thread
+        new Thread(() -> {
             try {
-                var cssUrl = getClass().getResource("/com/devstack/pos/view/styles/pos-styles.css");
-                if (cssUrl != null) {
-                    System.out.println("CSS found: " + cssUrl);
-                    scene.getStylesheets().add(cssUrl.toExternalForm());
-                    System.out.println("CSS loaded successfully");
-                } else {
-                    System.err.println("CSS not found");
-                }
-            } catch (Exception cssEx) {
-                System.err.println("════════════════════════════════════");
-                System.err.println("CSS EXCEPTION:");
-                cssEx.printStackTrace(System.err);
-                System.err.println("════════════════════════════════════");
+                System.out.println(">>> Starting Spring Boot in background...");
+
+                springContext = new SpringApplicationBuilder(PosApplication.class)
+                        .headless(false)
+                        .web(org.springframework.boot.WebApplicationType.NONE)
+                        .run();
+
+                System.out.println(">>> Spring ready! Switching to Login screen...");
+
+                // 3. Switch to Login Screen on the JavaFX thread
+                Platform.runLater(() -> {
+                    try {
+                        loadLoginScreen();
+                        splashStage.hide(); // Hide the splash screen
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        System.exit(1);
+                    }
+                });
+
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    System.err.println("FAILED TO START SPRING: " + e.getMessage());
+                    e.printStackTrace();
+                    System.exit(1);
+                });
             }
+        }).start();
+    }
 
-            System.out.println("About to set scene...");
-            primaryStage.setScene(scene);
-            primaryStage.setTitle("POS System");
-            primaryStage.setMinWidth(400);
-            primaryStage.setMinHeight(500);
-            primaryStage.setMaximized(true);
+    private Stage showSplashScreen() {
+        Stage splash = new Stage(StageStyle.UNDECORATED);
 
-            System.out.println("About to show window...");
-            primaryStage.show();
-            primaryStage.toFront();
+        // Use your logo if it exists, otherwise use a placeholder
+        VBox root = new VBox(20);
+        root.setAlignment(Pos.CENTER);
+        root.setStyle(
+                "-fx-background-color: white; -fx-padding: 40; -fx-background-radius: 20; -fx-border-radius: 20; -fx-border-color: #e2e8f0; -fx-border-width: 1;");
+        root.setEffect(new DropShadow(20, Color.rgb(0, 0, 0, 0.1)));
 
-            System.out.println("JavaFX application started successfully!");
+        Label title = new Label("KumaraPOS");
+        title.setStyle("-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
 
-        } catch (Throwable e) { // Changed to Throwable to catch everything
-            System.err.println("════════════════════════════════════");
-            System.err.println("FATAL ERROR:");
-            e.printStackTrace(System.err);
+        Label subTitle = new Label("Connecting to Cloud Database...");
+        subTitle.setStyle("-fx-font-size: 14px; -fx-text-fill: #64748b;");
 
-            Throwable cause = e.getCause();
-            int depth = 0;
-            while (cause != null && depth < 10) {
-                System.err.println("────────────────────────────────────");
-                System.err.println("Caused by (" + depth + "):");
-                cause.printStackTrace(System.err);
-                cause = cause.getCause();
-                depth++;
-            }
-            System.err.println("════════════════════════════════════");
-            Platform.exit();
-            System.exit(1);
+        ProgressBar pb = new ProgressBar();
+        pb.setPrefWidth(300);
+        pb.setProgress(ProgressBar.INDETERMINATE_PROGRESS); // "Bouncing" progress bar
+
+        root.getChildren().addAll(title, subTitle, pb);
+
+        Scene scene = new Scene(root, 450, 300);
+        scene.setFill(Color.TRANSPARENT);
+
+        splash.setScene(scene);
+        splash.centerOnScreen();
+        splash.show();
+
+        return splash;
+    }
+
+    private void loadLoginScreen() throws IOException {
+        FXMLLoader loader = new FXMLLoader();
+        var fxmlUrl = getClass().getResource("/com/devstack/pos/view/LoginForm.fxml");
+
+        if (fxmlUrl == null) {
+            throw new IOException("Could not find LoginForm.fxml");
         }
+
+        loader.setLocation(fxmlUrl);
+        loader.setControllerFactory(springContext::getBean);
+
+        Scene scene = new Scene(loader.load());
+
+        // Load CSS
+        var cssUrl = getClass().getResource("/com/devstack/pos/view/styles/pos-styles.css");
+        if (cssUrl != null) {
+            scene.getStylesheets().add(cssUrl.toExternalForm());
+        }
+
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("KumaraPOS - Point of Sale");
+        primaryStage.setMaximized(true);
+        primaryStage.show();
+        primaryStage.toFront();
     }
 
     @Override
@@ -103,5 +133,9 @@ public class Initialize extends Application {
 
     public static Stage getPrimaryStage() {
         return primaryStage;
+    }
+
+    public static ConfigurableApplicationContext getSpringContext() {
+        return springContext;
     }
 }

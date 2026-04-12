@@ -61,13 +61,14 @@
 /* Login Keypad (NO SHADOWS) */
 .keypad-btn-modern {
     -fx-background-color: white;
-    -fx-background-radius: 12;
+    -fx-background-radius: 16;
     -fx-border-color: #e2e8f0;
-    -fx-border-width: 1;
-    -fx-border-radius: 12;
-    -fx-font-size: 24px;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 16;
+    -fx-font-size: 28px;
     -fx-font-weight: bold;
     -fx-text-fill: #1e293b;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.02), 4, 0, 0, 2);
 }
 
 .keypad-btn-modern:hover {
@@ -156,6 +157,43 @@
     -fx-padding: 0 0 10 0;
 }
 
+
 .category-scroll .scroll-bar:horizontal {
     -fx-opacity: 0.3;
+}
+
+/* Profiles Section */
+.profile-card {
+    -fx-background-color: #f8fafc;
+    -fx-background-radius: 16;
+    -fx-padding: 10 20;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 1;
+    -fx-border-radius: 16;
+}
+
+.profile-card:hover {
+    -fx-background-color: #f1f5f9;
+    -fx-border-color: #2563eb;
+    -fx-border-width: 1;
+}
+
+.profile-card-selected {
+    -fx-background-color: #eff6ff;
+    -fx-background-radius: 16;
+    -fx-padding: 12 24;
+    -fx-border-color: #2563eb;
+    -fx-border-width: 2.5;
+    -fx-border-radius: 16;
+    -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.1), 10, 0, 0, 4);
+}
+
+.contact-admin-text {
+    -fx-font-size: 14px;
+    -fx-fill: #2563eb;
+    -fx-cursor: hand;
+}
+
+.contact-admin-text:hover {
+    -fx-underline: true;
 }

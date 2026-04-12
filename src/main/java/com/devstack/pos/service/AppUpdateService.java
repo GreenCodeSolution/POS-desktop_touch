@@ -28,14 +28,14 @@ import java.util.function.Consumer;
  * 2. Run deploy-installer.ps1 → get KumaraPOS-x.x.x.exe
  * 3. Upload the .exe to your server (or GitHub Releases, Google Drive, etc.)
  * 4. Run this SQL:
- *      UPDATE system_settings
- *      SET latest_app_version = '1.0.1',
- *          update_release_notes = 'Fixed receipt printer bug',
- *          update_download_url = 'https://your-server.com/updates/KumaraPOS-1.0.1.exe',
- *          update_mandatory = false
- *      WHERE is_active = true;
+ * UPDATE system_settings
+ * SET latest_app_version = '1.0.1',
+ * update_release_notes = 'Fixed receipt printer bug',
+ * update_download_url = 'https://your-server.com/updates/KumaraPOS-1.0.1.exe',
+ * update_mandatory = false
+ * WHERE is_active = true;
  * 5. Next time the cashier opens the app → popup appears →
- *    clicks "Update Now" → .exe downloads automatically → installer runs → done!
+ * clicks "Update Now" → .exe downloads automatically → installer runs → done!
  * ─────────────────────────────────────────────────────────
  */
 
@@ -58,18 +58,18 @@ public class AppUpdateService {
     public boolean isUpdateAvailable() {
         try {
             SystemSettings settings = systemSettingsService.getSystemSettings();
-            if (settings == null || settings.getLatestAppVersion() == null 
+            if (settings == null || settings.getLatestAppVersion() == null
                     || settings.getLatestAppVersion().isBlank()) {
                 return false;
             }
 
             String latestVersion = settings.getLatestAppVersion().trim();
             String current = currentAppVersion != null ? currentAppVersion.trim() : "1.0.0";
-            
+
             boolean isNewer = compareVersions(latestVersion, current) > 0;
 
             if (isNewer) {
-                log.info("Update available! Current: v{}, Latest: v{}", 
+                log.info("Update available! Current: v{}, Latest: v{}",
                         currentAppVersion, latestVersion);
             }
 
@@ -92,8 +92,9 @@ public class AppUpdateService {
     public String getLatestVersion() {
         try {
             SystemSettings settings = systemSettingsService.getSystemSettings();
-            return settings != null && settings.getLatestAppVersion() != null 
-                    ? settings.getLatestAppVersion().trim() : "Unknown";
+            return settings != null && settings.getLatestAppVersion() != null
+                    ? settings.getLatestAppVersion().trim()
+                    : "Unknown";
         } catch (Exception e) {
             return "Unknown";
         }
@@ -102,8 +103,9 @@ public class AppUpdateService {
     public String getReleaseNotes() {
         try {
             SystemSettings settings = systemSettingsService.getSystemSettings();
-            return settings != null && settings.getUpdateReleaseNotes() != null 
-                    ? settings.getUpdateReleaseNotes() : "Bug fixes and improvements.";
+            return settings != null && settings.getUpdateReleaseNotes() != null
+                    ? settings.getUpdateReleaseNotes()
+                    : "Bug fixes and improvements.";
         } catch (Exception e) {
             return "Bug fixes and improvements.";
         }
@@ -112,8 +114,9 @@ public class AppUpdateService {
     public String getDownloadUrl() {
         try {
             SystemSettings settings = systemSettingsService.getSystemSettings();
-            return settings != null && settings.getUpdateDownloadUrl() != null 
-                    ? settings.getUpdateDownloadUrl().trim() : null;
+            return settings != null && settings.getUpdateDownloadUrl() != null
+                    ? settings.getUpdateDownloadUrl().trim()
+                    : null;
         } catch (Exception e) {
             return null;
         }
@@ -174,7 +177,8 @@ public class AppUpdateService {
                     .build();
             HttpResponse<Void> headResponse = client.send(headRequest, HttpResponse.BodyHandlers.discarding());
             totalSize = headResponse.headers().firstValueAsLong("content-length").orElse(-1);
-            log.info("Update file size: {} MB", totalSize > 0 ? String.format("%.1f", totalSize / 1024.0 / 1024.0) : "unknown");
+            log.info("Update file size: {} MB",
+                    totalSize > 0 ? String.format("%.1f", totalSize / 1024.0 / 1024.0) : "unknown");
         } catch (Exception e) {
             log.warn("Could not determine file size (progress bar may not work): {}", e.getMessage());
         }
@@ -187,8 +191,9 @@ public class AppUpdateService {
         }
 
         // Stream to file with progress tracking
-        long finalTotalSize = totalSize > 0 ? totalSize : response.headers().firstValueAsLong("content-length").orElse(-1);
-        
+        long finalTotalSize = totalSize > 0 ? totalSize
+                : response.headers().firstValueAsLong("content-length").orElse(-1);
+
         try (InputStream inputStream = response.body()) {
             byte[] buffer = new byte[8192];
             long downloaded = 0;
@@ -208,7 +213,7 @@ public class AppUpdateService {
                         } else {
                             // If size unknown, send a special value or just alternate tiny progress
                             // to keep UI moving. -1.0 can signal indeterminate mode in some UIs.
-                            progressCallback.accept(-1.0); 
+                            progressCallback.accept(-1.0);
                         }
                     }
                 }
@@ -241,10 +246,10 @@ public class AppUpdateService {
             throw new IOException("Installer file not found: " + installerPath);
         }
 
-        // On Windows, use 'cmd /c start' to launch the installer 
+        // On Windows, use 'cmd /c start' to launch the installer
         // as a completely separate process so we can exit safely.
-        String[] cmd = {"cmd", "/c", "start", "/wait", installerPath.toString()};
-        
+        String[] cmd = { "cmd", "/c", "start", "/wait", installerPath.toString() };
+
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.directory(installerPath.getParent().toFile());
         pb.start();
@@ -262,17 +267,18 @@ public class AppUpdateService {
     private String extractFileName(String url) {
         String path = URI.create(url).getPath();
         String fileName = path.substring(path.lastIndexOf('/') + 1);
-        
+
         // Default name if URL doesn't have a clear filename
         if (fileName.isBlank() || !fileName.contains(".")) {
             fileName = "KumaraPOS-" + getLatestVersion() + ".exe";
         }
-        
+
         return fileName;
     }
 
     /**
      * Compare two semantic version strings (e.g., "1.0.0" vs "1.0.1")
+     * 
      * @return positive if v1 > v2, negative if v1 < v2, 0 if equal
      */
     private int compareVersions(String v1, String v2) {

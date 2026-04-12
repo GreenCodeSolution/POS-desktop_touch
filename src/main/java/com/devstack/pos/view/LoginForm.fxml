@@ -7,105 +7,113 @@
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
+<?import javafx.scene.shape.Circle?>
 <VBox fx:id="mainContainer" xmlns="http://javafx.com/javafx/20.0.1"
       xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.devstack.pos.controller.LoginFormController"
       stylesheets="@styles/modern-touch.css" styleClass="background-touch" spacing="0">
     <children>
-        <!-- Blue Header Bar -->
-    <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #9d9fa5; -fx-padding: 15 40;">
-        <Text text="QuickPOS" style="-fx-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <HBox alignment="CENTER" spacing="15">
-            <Text fx:id="lblTime" text="12:00" style="-fx-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;"/>
-            <HBox style="-fx-background-color: rgba(255,255,255,0.15); -fx-background-radius: 30; -fx-padding: 8 20;">
-                <Text fx:id="lblDate" text="Fri 10 Apr 2026" style="-fx-fill: white; -fx-font-size: 16px;"/>
+        <!-- Premium Header Bar -->
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #0f172a; -fx-padding: 18 50; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 2);">
+            <HBox alignment="CENTER" spacing="12">
+<!--                <Pane prefWidth="35" prefHeight="35" style="-fx-background-color: #2563eb; -fx-background-radius: 8;"/>-->
+                <Text text="QuickPOS" style="-fx-fill: white; -fx-font-size: 26px; -fx-font-weight: bold;"/>
+            </HBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <HBox alignment="CENTER" spacing="25">
+                <VBox alignment="CENTER_RIGHT">
+                    <Text fx:id="lblTime" text="12:00" style="-fx-fill: white; -fx-font-size: 22px; -fx-font-weight: bold;"/>
+                    <Text fx:id="lblDate" text="Fri 10 Apr 2026" style="-fx-fill: #94a3b8; -fx-font-size: 13px;"/>
+                </VBox>
+                <HBox alignment="CENTER" spacing="10" style="-fx-background-color: rgba(255,255,255,0.05); -fx-background-radius: 12; -fx-padding: 8 15; -fx-border-color: rgba(255,255,255,0.1); -fx-border-radius: 12;">
+                    <Pane prefWidth="8" prefHeight="8" style="-fx-background-color: #10b981; -fx-background-radius: 50;"/>
+                    <Text text="System Online" style="-fx-fill: #e2e8f0; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+                </HBox>
             </HBox>
         </HBox>
-    </HBox>
 
-        <HBox fx:id="context" alignment="CENTER" VBox.vgrow="ALWAYS" spacing="0">
+        <HBox fx:id="context" alignment="CENTER" VBox.vgrow="ALWAYS" style="-fx-background-color: #f1f5f9;">
             <children>
-        <!-- Left Side: Login Form -->
-        <VBox alignment="CENTER" HBox.hgrow="ALWAYS" 
-              style="-fx-background-image: url('assets/login_bg.png'); -fx-background-size: cover; -fx-background-position: center;">
-            <!-- Main Two-Column Container -->
-            <VBox alignment="CENTER" spacing="20" maxWidth="950" 
-                  style="-fx-padding: 40 50; -fx-background-color: white; -fx-background-radius: 32; -fx-border-color: #e2e8f0; -fx-border-width: 1;">
-                
-                <HBox spacing="40" alignment="CENTER">
-                    <!-- Left Column: Staff Profiles -->
-                    <VBox spacing="15" alignment="TOP_LEFT" prefWidth="420">
-                        <VBox alignment="TOP_LEFT" spacing="5">
-                            <Text text="GreenCode POS" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #6366f1;"/>
-                            <Text text="Staff login" style="-fx-font-size: 30px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
-                            <Text text="Select your account" style="-fx-font-size: 16px; -fx-fill: #94a3b8;"/>
-                        </VBox>
-                        
-                        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" style="-fx-background-color: transparent; -fx-background: transparent; -fx-padding: 15 0;">
-                            <VBox fx:id="profileContainer" spacing="15" alignment="TOP_LEFT">
-                                <!-- Horizontal Profile Cards injected here -->
+                <StackPane HBox.hgrow="ALWAYS">
+                    <!-- Subtle Background Image -->
+                    <VBox alignment="CENTER" style="-fx-background-image: url('assets/login_bg.png'); -fx-background-size: cover; -fx-background-position: center; -fx-opacity: 0.03;"/>
+                    
+                    <VBox alignment="CENTER" spacing="0">
+                        <!-- Main Card -->
+                        <HBox alignment="CENTER" spacing="0" maxWidth="950" 
+                              style="-fx-background-color: white; -fx-background-radius: 28; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.06), 30, 0, 0, 15); -fx-border-color: #e2e8f0; -fx-border-width: 1;">
+                            
+                            <!-- Left: Profile Selection -->
+                            <VBox spacing="25" alignment="TOP_LEFT" prefWidth="450" style="-fx-padding: 40 50;">
+                                <VBox spacing="5">
+                                    <HBox spacing="10" alignment="CENTER_LEFT">
+                                        <Region prefWidth="3" prefHeight="20" style="-fx-background-color: #2563eb; -fx-background-radius: 2;"/>
+                                        <Text text="TERMINAL ACCESS" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-fill: #2563eb; -fx-letter-spacing: 1px;"/>
+                                    </HBox>
+                                    <Text text="Staff Login" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                                    <Text text="Select your profile to continue" style="-fx-font-size: 14px; -fx-fill: #64748b;"/>
+                                </VBox>
+                                
+                                <ScrollPane fitToWidth="true" hbarPolicy="NEVER" vbarPolicy="AS_NEEDED" 
+                                            style="-fx-background-color: transparent; -fx-background: transparent;" prefHeight="300">
+                                    <VBox fx:id="profileContainer" spacing="12" alignment="TOP_LEFT" style="-fx-padding: 5 10 5 2;">
+                                        <!-- Profile Cards -->
+                                    </VBox>
+                                </ScrollPane>
+                                
+                                <HBox alignment="CENTER_LEFT" style="-fx-padding: 10 0 0 0;">
+                                    <Text text="Forgot PIN? Contact admin" styleClass="contact-admin-text"/>
+                                </HBox>
                             </VBox>
-                        </ScrollPane>
+                            
+                            <!-- Divider -->
+                            <Pane prefWidth="1" prefHeight="550" style="-fx-background-color: #f1f5f9;"/>
+                            
+                            <!-- Right: Keypad Area -->
+                            <VBox spacing="30" alignment="CENTER" prefWidth="500" style="-fx-background-color: #f8fafc; -fx-background-radius: 0 28 28 0; -fx-padding: 40 50;">
+                                <VBox alignment="CENTER" spacing="15">
+                                    <Text text="ENTER ACCESS PIN" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-fill: #64748b; -fx-letter-spacing: 1px;"/>
+                                    
+                                    <HBox alignment="CENTER" spacing="15" fx:id="pinDotsContainer">
+                                        <Pane style="-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-width: 2.5; -fx-background-radius: 50; -fx-min-width: 20; -fx-min-height: 20;"/>
+                                        <Pane style="-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-width: 2.5; -fx-background-radius: 50; -fx-min-width: 20; -fx-min-height: 20;"/>
+                                        <Pane style="-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-width: 2.5; -fx-background-radius: 50; -fx-min-width: 20; -fx-min-height: 20;"/>
+                                        <Pane style="-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-width: 2.5; -fx-background-radius: 50; -fx-min-width: 20; -fx-min-height: 20;"/>
+                                    </HBox>
+                                    
+                                    <JFXPasswordField fx:id="txtPassword" visible="false" managed="false"/>
+                                </VBox>
+
+                                <GridPane alignment="CENTER" hgap="20" vgap="20">
+                                    <JFXButton text="1" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" onAction="#btnKeypadPressed"/>
+                                    <JFXButton text="2" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" onAction="#btnKeypadPressed"/>
+                                    <JFXButton text="3" GridPane.columnIndex="2" GridPane.rowIndex="0" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" onAction="#btnKeypadPressed"/>
+                                    
+                                    <JFXButton text="4" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" onAction="#btnKeypadPressed"/>
+                                    <JFXButton text="5" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" onAction="#btnKeypadPressed"/>
+                                    <JFXButton text="6" GridPane.columnIndex="2" GridPane.rowIndex="1" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" onAction="#btnKeypadPressed"/>
+                                    
+                                    <JFXButton text="7" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" onAction="#btnKeypadPressed"/>
+                                    <JFXButton text="8" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" onAction="#btnKeypadPressed"/>
+                                    <JFXButton text="9" GridPane.columnIndex="2" GridPane.rowIndex="2" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" onAction="#btnKeypadPressed"/>
+                                    
+                                    <JFXButton text="C" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" style="-fx-text-fill: #ef4444; -fx-font-size: 16px;" onAction="#btnKeypadClear"/>
+                                    <JFXButton text="0" GridPane.columnIndex="1" GridPane.rowIndex="3" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" onAction="#btnKeypadPressed"/>
+                                    <JFXButton text="⌫" GridPane.columnIndex="2" GridPane.rowIndex="3" styleClass="keypad-btn-modern" prefWidth="95" prefHeight="80" style="-fx-font-size: 28px;" onAction="#btnKeypadBackspace"/>
+                                </GridPane>
+                                
+                                <JFXButton text="Access Terminal" onAction="#btnSignInOnAction" maxWidth="Infinity" 
+                                           style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-padding: 16 0; -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.2), 10, 0, 0, 5);"/>
+                            </VBox>
+                        </HBox>
                         
-                        <HBox alignment="CENTER" spacing="5" style="-fx-padding: 10 0;">
-                            <Text text="Forgot PIN? Contact admin" style="-fx-font-size: 14px; -fx-fill: #64748b;"/>
+                        <HBox alignment="CENTER" spacing="15" style="-fx-padding: 25 0 0 0;">
+                            <Text text="© 2026 GreenCode Solutions" style="-fx-font-size: 12px; -fx-fill: #94a3b8;"/>
+                            <Circle radius="2" fill="#cbd5e1"/>
+                            <Text fx:id="lblAppVersion" text="v1.0.0" style="-fx-font-size: 12px; -fx-fill: #1e293b; -fx-font-weight: bold;"/>
                         </HBox>
                     </VBox>
-                    
-                    <!-- Vertical Divider -->
-                    <Pane prefWidth="2" style="-fx-background-color: #f1f5f9; -fx-min-height: 450;"/>
-                    
-                    <!-- Right Column: PIN & Keypad -->
-                    <VBox spacing="20" alignment="CENTER" prefWidth="350" style="-fx-background-color: #f8fafc; -fx-background-radius: 0 32 32 0; -fx-padding: 0 0 0 40; -fx-border-color: #f1f5f9; -fx-border-width: 0 0 0 1;">
-                        <VBox alignment="CENTER" spacing="15">
-                            <Text text="Enter PIN" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #64748b;"/>
-                            
-                            <!-- PIN Indicator Dots (Hollow) -->
-                            <HBox alignment="CENTER" spacing="15" fx:id="pinDotsContainer">
-                                <Pane style="-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-width: 2; -fx-background-radius: 50; -fx-min-width: 18; -fx-min-height: 18;"/>
-                                <Pane style="-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-width: 2; -fx-background-radius: 50; -fx-min-width: 18; -fx-min-height: 18;"/>
-                                <Pane style="-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-width: 2; -fx-background-radius: 50; -fx-min-width: 18; -fx-min-height: 18;"/>
-                                <Pane style="-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-width: 2; -fx-background-radius: 50; -fx-min-width: 18; -fx-min-height: 18;"/>
-                            </HBox>
-                            
-                            <JFXPasswordField fx:id="txtPassword" visible="false" managed="true" prefHeight="1"/>
-                        </VBox>
-
-                        <!-- Integrated Numeric Keypad (Styled like image) -->
-                        <GridPane alignment="CENTER" hgap="15" vgap="15" styleClass="keypad" style="-fx-background-color: transparent;">
-                            <JFXButton text="1" GridPane.columnIndex="0" GridPane.rowIndex="0" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" onAction="#btnKeypadPressed"/>
-                            <JFXButton text="2" GridPane.columnIndex="1" GridPane.rowIndex="0" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" onAction="#btnKeypadPressed"/>
-                            <JFXButton text="3" GridPane.columnIndex="2" GridPane.rowIndex="0" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" onAction="#btnKeypadPressed"/>
-                            
-                            <JFXButton text="4" GridPane.columnIndex="0" GridPane.rowIndex="1" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" onAction="#btnKeypadPressed"/>
-                            <JFXButton text="5" GridPane.columnIndex="1" GridPane.rowIndex="1" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" onAction="#btnKeypadPressed"/>
-                            <JFXButton text="6" GridPane.columnIndex="2" GridPane.rowIndex="1" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" onAction="#btnKeypadPressed"/>
-                            
-                            <JFXButton text="7" GridPane.columnIndex="0" GridPane.rowIndex="2" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" onAction="#btnKeypadPressed"/>
-                            <JFXButton text="8" GridPane.columnIndex="1" GridPane.rowIndex="2" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" onAction="#btnKeypadPressed"/>
-                            <JFXButton text="9" GridPane.columnIndex="2" GridPane.rowIndex="2" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" onAction="#btnKeypadPressed"/>
-                            
-                            <JFXButton text="c" GridPane.columnIndex="0" GridPane.rowIndex="3" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" style="-fx-text-fill: #ef4444;" onAction="#btnKeypadClear"/>
-                            <JFXButton text="0" GridPane.columnIndex="1" GridPane.rowIndex="3" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" onAction="#btnKeypadPressed"/>
-                            <JFXButton text="⌫" GridPane.columnIndex="2" GridPane.rowIndex="3" styleClass="keypad-btn-modern" prefWidth="85" prefHeight="75" onAction="#btnKeypadBackspace"/>
-                        </GridPane>
-                        
-                        <JFXButton text="Access terminal" onAction="#btnSignInOnAction" 
-                                   style="-fx-background-color: #f8fafc; -fx-text-fill: #f1f5f9; -fx-font-size: 16px; -fx-border-color: #f1f5f9; -fx-border-radius: 12; -fx-padding: 15 60;"/>
-                    </VBox>
-                </HBox>
-                
-                <!-- Simple Footer -->
-                <HBox alignment="CENTER" spacing="15" style="-fx-padding: 10 0 0 0;">
-                    <Text text="© 2026 GreenCode Solutions" style="-fx-font-size: 11px; -fx-fill: #cbd5e1;"/>
-                    <Text text="|" style="-fx-font-size: 11px; -fx-fill: #cbd5e1;"/>
-                    <Text fx:id="lblAppVersion" text="v1.0.0" style="-fx-font-size: 11px; -fx-fill: #94a3b8; -fx-font-weight: bold;"/>
-                </HBox>
-            </VBox>
-        </VBox>
-        
+                </StackPane>
             </children>
         </HBox>
     </children>
 </VBox>
-

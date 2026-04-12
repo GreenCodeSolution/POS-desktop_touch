@@ -115,7 +115,7 @@ public class LoginFormController implements Initializable {
         card.setPrefWidth(350);
         card.setMinHeight(80);
         card.setCursor(javafx.scene.Cursor.HAND);
-        card.setStyle("-fx-background-color: #f8fafc; -fx-background-radius: 16; -fx-padding: 10 20; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 16;");
+        card.getStyleClass().add("profile-card");
         
         // Avatar Circle
         StackPane avatarFrame = new StackPane();
@@ -135,7 +135,7 @@ public class LoginFormController implements Initializable {
         infoBox.setSpacing(2);
         
         Label nameLabel = new Label(user.getFirstName() != null ? user.getFirstName() : user.getEmail().split("@")[0]);
-        nameLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
+        nameLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
         
         // Extract Role (assuming the most relevant role)
         String roleName = "Cashier"; // Default
@@ -144,7 +144,7 @@ public class LoginFormController implements Initializable {
             roleName = roleName.substring(0, 1).toUpperCase() + roleName.substring(1).toLowerCase();
         }
         Label roleLabel = new Label(roleName);
-        roleLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #94a3b8;");
+        roleLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #94a3b8;");
         
         infoBox.getChildren().addAll(nameLabel, roleLabel);
         
@@ -161,7 +161,10 @@ public class LoginFormController implements Initializable {
         for (javafx.scene.Node node : profileContainer.getChildren()) {
             if (node instanceof HBox) {
                 HBox h = (HBox) node;
-                h.setStyle("-fx-background-color: #f8fafc; -fx-background-radius: 16; -fx-padding: 10 20; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 16;");
+                h.getStyleClass().remove("profile-card-selected");
+                if (!h.getStyleClass().contains("profile-card")) {
+                    h.getStyleClass().add("profile-card");
+                }
                 
                 StackPane frame = (StackPane) h.getChildren().get(0);
                 Circle c = (Circle) frame.getChildren().get(0);
@@ -179,7 +182,8 @@ public class LoginFormController implements Initializable {
         
         // Highlight selected
         selectedUser = user;
-        card.setStyle("-fx-background-color: #eef2ff; -fx-background-radius: 16; -fx-padding: 10 20; -fx-border-color: #4f46e5; -fx-border-width: 2; -fx-border-radius: 16;");
+        card.getStyleClass().remove("profile-card");
+        card.getStyleClass().add("profile-card-selected");
         
         avatarCircle.setFill(Color.web("#6366f1"));
         initial.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: white;");
