@@ -14,7 +14,7 @@
 
     <groupId>com.devstack</groupId>
     <artifactId>pos-desktop</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <name>Kumara Enterprises POS System - Desktop</name>
     <description>Point of Sale Desktop Application built with Spring Boot and JavaFX</description>
 
