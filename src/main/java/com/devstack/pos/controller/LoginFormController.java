@@ -8,6 +8,7 @@ import javafx.util.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import com.devstack.pos.entity.AppUser;
+import com.devstack.pos.service.AppUpdateService;
 import com.devstack.pos.service.SessionManager;
 import com.devstack.pos.service.TrialService;
 import com.devstack.pos.service.UserService;
@@ -20,6 +21,8 @@ import javafx.fxml.Initializable;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import com.jfoenix.controls.JFXPasswordField;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.FlowPane;
@@ -54,6 +57,7 @@ public class LoginFormController implements Initializable {
     private final JwtUtil jwtUtil;
     private final SessionManager sessionManager;
     private final TrialService trialService;
+    private final AppUpdateService appUpdateService;
     
     private AppUser selectedUser;
 
@@ -81,7 +85,8 @@ public class LoginFormController implements Initializable {
             }
         });
         
-        // Automatically hide email field as we use profile selection now
+        // Check for app updates and show confirmation popup
+        checkForAppUpdate();
     }
 
     private void loadCashierProfiles() {
@@ -202,6 +207,181 @@ public class LoginFormController implements Initializable {
                 dot.setStyle("-fx-background-color: transparent; -fx-border-color: #cbd5e1; -fx-border-width: 2; -fx-background-radius: 50; -fx-min-width: 18; -fx-min-height: 18;");
             }
         }
+    }
+
+    /**
+     * OTA Auto-Update Check.
+     * 
+     * On app startup, reads latest_app_version from system_settings table.
+     * If a newer version exists:
+     *   - If download URL is set → offers to download + install automatically
+     *   - If no URL → shows notification to inform the cashier
+     * 
+     * If update is MANDATORY, login is blocked until the new version is installed.
+     */
+    private void checkForAppUpdate() {
+        try {
+            if (!appUpdateService.isUpdateAvailable()) {
+                return; // Already on latest version
+            }
+
+            String currentVer = appUpdateService.getCurrentVersion();
+            String latestVer = appUpdateService.getLatestVersion();
+            String releaseNotes = appUpdateService.getReleaseNotes();
+            boolean mandatory = appUpdateService.isUpdateMandatory();
+            boolean hasDownloadUrl = appUpdateService.hasDownloadUrl();
+
+            System.out.println("=== UPDATE AVAILABLE ===");
+            System.out.println("Current: v" + currentVer);
+            System.out.println("Latest:  v" + latestVer);
+            System.out.println("Mandatory: " + mandatory);
+            System.out.println("Auto-download: " + hasDownloadUrl);
+            System.out.println("========================");
+
+            Alert updateAlert = new Alert(Alert.AlertType.CONFIRMATION);
+            updateAlert.setTitle("System Update Available");
+            updateAlert.setHeaderText("\uD83D\uDD04 New Version v" + latestVer + " Available");
+
+            String message = "A new version of the POS system is available.\n\n"
+                    + "Current Version: v" + currentVer + "\n"
+                    + "New Version: v" + latestVer + "\n\n"
+                    + "\uD83D\uDCCB What's New:\n" + releaseNotes + "\n\n";
+
+            if (hasDownloadUrl) {
+                message += "Click 'Update Now' to automatically download and install the update.";
+            } else {
+                message += "Please contact your administrator to install the update.";
+            }
+
+            if (mandatory) {
+                message += "\n\n\u26A0\uFE0F This is a MANDATORY update.\n"
+                        + "You cannot use the system until it is updated.";
+            }
+
+            updateAlert.setContentText(message);
+
+            // Configure buttons
+            ButtonType btnUpdateNow = new ButtonType(hasDownloadUrl ? "Update Now" : "OK");
+
+            if (mandatory) {
+                updateAlert.getButtonTypes().setAll(btnUpdateNow);
+            } else {
+                ButtonType btnLater = new ButtonType("Later", ButtonBar.ButtonData.CANCEL_CLOSE);
+                updateAlert.getButtonTypes().setAll(btnUpdateNow, btnLater);
+            }
+
+            updateAlert.showAndWait().ifPresent(response -> {
+                if (response == btnUpdateNow) {
+                    if (hasDownloadUrl) {
+                        // ===== AUTO DOWNLOAD & INSTALL =====
+                        performAutoUpdate();
+                    } else {
+                        // No download URL — just close if mandatory
+                        if (mandatory) {
+                            javafx.application.Platform.exit();
+                            System.exit(0);
+                        }
+                    }
+                } else {
+                    System.out.println("User deferred update to later.");
+                }
+            });
+
+            // If mandatory and the user didn't update, block
+            if (mandatory && !hasDownloadUrl) {
+                javafx.application.Platform.exit();
+                System.exit(0);
+            }
+
+        } catch (Exception e) {
+            System.err.println("Update check failed (non-critical): " + e.getMessage());
+        }
+    }
+
+    /**
+     * Download the update .exe from the server and launch the installer.
+     * Shows a progress dialog during download.
+     */
+    private void performAutoUpdate() {
+        // Create a progress dialog
+        Alert progressAlert = new Alert(Alert.AlertType.INFORMATION);
+        progressAlert.setTitle("Downloading Update");
+        progressAlert.setHeaderText("\u2B07\uFE0F Downloading update...");
+        progressAlert.setContentText("Please wait while the update is being downloaded.\nDo not close the application.");
+        progressAlert.getButtonTypes().clear(); // Remove all buttons — user must wait
+
+        // Add a progress bar to the dialog
+        javafx.scene.control.ProgressBar progressBar = new javafx.scene.control.ProgressBar(0);
+        progressBar.setPrefWidth(400);
+        Label progressLabel = new Label("Starting download...");
+        progressLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #64748b;");
+
+        VBox progressContent = new VBox(10, progressBar, progressLabel);
+        progressContent.setAlignment(javafx.geometry.Pos.CENTER);
+        progressAlert.getDialogPane().setExpandableContent(progressContent);
+        progressAlert.getDialogPane().setExpanded(true);
+
+        progressAlert.show();
+
+        // Download in background thread to keep UI responsive
+        new Thread(() -> {
+            try {
+                java.nio.file.Path installerPath = appUpdateService.downloadUpdate(progress -> {
+                    // Update progress bar on JavaFX thread
+                    javafx.application.Platform.runLater(() -> {
+                        progressBar.setProgress(progress);
+                        int percent = (int) (progress * 100);
+                        progressLabel.setText("Downloading... " + percent + "%");
+                        if (progress >= 1.0) {
+                            progressAlert.setHeaderText("\u2705 Download Complete!");
+                            progressLabel.setText("Launching installer...");
+                        }
+                    });
+                });
+
+                // Download complete — launch installer on JavaFX thread
+                javafx.application.Platform.runLater(() -> {
+                    try {
+                        progressAlert.close();
+
+                        // Show final confirmation
+                        Alert launchAlert = new Alert(Alert.AlertType.INFORMATION);
+                        launchAlert.setTitle("Update Ready");
+                        launchAlert.setHeaderText("\u2705 Update Downloaded Successfully!");
+                        launchAlert.setContentText(
+                                "The update has been downloaded.\n\n"
+                                + "The application will now close and the installer will start.\n"
+                                + "Please follow the installer instructions to complete the update.");
+                        launchAlert.showAndWait();
+
+                        // Launch the installer and exit
+                        appUpdateService.launchInstallerAndExit(installerPath);
+
+                    } catch (Exception e) {
+                        showUpdateError("Failed to launch the installer: " + e.getMessage());
+                    }
+                });
+
+            } catch (Exception e) {
+                javafx.application.Platform.runLater(() -> {
+                    progressAlert.close();
+                    showUpdateError("Download failed: " + e.getMessage()
+                            + "\n\nPlease check your internet connection and try again,"
+                            + "\nor contact your administrator for manual installation.");
+                });
+            }
+        }, "UpdateDownloadThread").start();
+    }
+
+    /**
+     * Show an error dialog for update failures
+     */
+    private void showUpdateError(String errorMessage) {
+        Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+        errorAlert.setTitle("Update Failed");
+        errorAlert.setHeaderText("\u274C Update Failed");
+        errorAlert.setContentText(errorMessage);
+        errorAlert.showAndWait();
     }
 
     // Signup is managed via the web portal — no create account from desktop

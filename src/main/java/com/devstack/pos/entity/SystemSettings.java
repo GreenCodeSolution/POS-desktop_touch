@@ -57,6 +57,23 @@ public class SystemSettings {
     @Column(name = "loyalty_points_rate")
     private Double loyaltyPointsRate = 100.0;
 
+    // Desktop app update notification fields
+    // Set these from Web Admin or directly in DB when you release a new version
+    @Column(name = "latest_app_version", length = 20)
+    private String latestAppVersion;
+
+    @Column(name = "update_release_notes", length = 1000)
+    private String updateReleaseNotes;
+
+    @Column(name = "update_mandatory")
+    private Boolean updateMandatory = false;
+
+    // URL where the new .exe installer is hosted
+    // e.g., "https://your-server.com/updates/KumaraPOS-1.0.1.exe"
+    // or GitHub Releases URL, Google Drive direct link, etc.
+    @Column(name = "update_download_url", length = 500)
+    private String updateDownloadUrl;
+
     public SystemSettings(String businessName, String address, String contactNumber,
             String email, String taxNumber, String footerMessage) {
         this.businessName = businessName;
@@ -69,5 +86,8 @@ public class SystemSettings {
         this.trialEndDate = null;
         this.isActive = true;
         this.loyaltyPointsRate = 100.0;
+        this.latestAppVersion = null;
+        this.updateReleaseNotes = null;
+        this.updateMandatory = false;
     }
 }
