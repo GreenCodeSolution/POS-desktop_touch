@@ -52,6 +52,7 @@ public class LoginFormController implements Initializable {
     public HBox pinDotsContainer;
     public Text lblTime;
     public Text lblDate;
+    public Text lblAppVersion;
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
@@ -74,6 +75,7 @@ public class LoginFormController implements Initializable {
         
         // Load active cashiers into the profile selection area
         loadCashierProfiles();
+        lblAppVersion.setText("v" + appUpdateService.getCurrentVersion());
         
         // Ensure dots are initialized
         updatePinDots();
@@ -231,12 +233,11 @@ public class LoginFormController implements Initializable {
             boolean mandatory = appUpdateService.isUpdateMandatory();
             boolean hasDownloadUrl = appUpdateService.hasDownloadUrl();
 
-            System.out.println("=== UPDATE AVAILABLE ===");
-            System.out.println("Current: v" + currentVer);
-            System.out.println("Latest:  v" + latestVer);
-            System.out.println("Mandatory: " + mandatory);
-            System.out.println("Auto-download: " + hasDownloadUrl);
-            System.out.println("========================");
+            System.out.println("=== UPDATE CHECK ===");
+            System.out.println("LOCAL APP VERSION: '" + currentVer + "'");
+            System.out.println("DATABASE VERSION:  '" + latestVer + "'");
+            System.out.println("IS NEWER? " + appUpdateService.isUpdateAvailable());
+            System.out.println("====================");
 
             Alert updateAlert = new Alert(Alert.AlertType.CONFIRMATION);
             updateAlert.setTitle("System Update Available");

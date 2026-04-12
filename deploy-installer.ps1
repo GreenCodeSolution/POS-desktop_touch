@@ -7,6 +7,17 @@ Write-Host "  KumaraPOS Installer Builder" -ForegroundColor Cyan
 Write-Host "=====================================" -ForegroundColor Cyan
 Write-Host ""
 
+# Configuration - Auto-detect Version from pom.xml
+$pomContent = Get-Content "pom.xml" -Raw
+$versionMatch = [regex]::Match($pomContent, '<version>(.*?)<\/version>')
+if ($versionMatch.Success) {
+    $APP_VERSION = $versionMatch.Groups[1].Value
+} else {
+    $APP_VERSION = "1.0.0" # Fallback
+}
+
+Write-Host "Detected Project Version: $APP_VERSION" -ForegroundColor Cyan
+
 # Configuration - Auto-detect JDK path
 Write-Host "[0/8] Detecting JDK installation..." -ForegroundColor Green
 
@@ -686,7 +697,7 @@ if ($args -contains "--app-image" -or $args -contains "-p" -or $args -contains "
 # Enhanced with maximum compatibility options for all Windows versions
 $jpackageArgs = @(
     "--name", "KumaraPOS",
-    "--app-version", "1.0.0",
+    "--app-version", "$APP_VERSION",
     "--vendor", "Kumara Enterprises",
     "--description", "Point of Sale System - Self Contained Installer",
     "--type", $installerType,
