@@ -303,74 +303,73 @@ public class LoginFormController implements Initializable {
      * Shows a progress dialog during download.
      */
     private void performAutoUpdate() {
-        // Create a progress dialog
+        // Create a custom alert for download progress
         Alert progressAlert = new Alert(Alert.AlertType.INFORMATION);
-        progressAlert.setTitle("Downloading Update");
-        progressAlert.setHeaderText("\u2B07\uFE0F Downloading update...");
-        progressAlert.setContentText("Please wait while the update is being downloaded.\nDo not close the application.");
-        progressAlert.getButtonTypes().clear(); // Remove all buttons — user must wait
+        progressAlert.setTitle("Update in Progress");
+        progressAlert.setHeaderText("\u2B07\uFE0F Downloading Update...");
+        
+        // Remove default buttons
+        progressAlert.getButtonTypes().clear();
 
-        // Add a progress bar to the dialog
+        // Create UI components for progress
         javafx.scene.control.ProgressBar progressBar = new javafx.scene.control.ProgressBar(0);
-        progressBar.setPrefWidth(400);
-        Label progressLabel = new Label("Starting download...");
-        progressLabel.setStyle("-fx-font-size: 13px; -fx-text-fill: #64748b;");
+        progressBar.setPrefWidth(350);
+        progressBar.setMinHeight(20);
+        
+        Label statusLabel = new Label("Preparing download...");
+        statusLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #1e293b; -fx-font-weight: bold;");
+        
+        Label detailLabel = new Label("Connecting to server...");
+        detailLabel.setStyle("-fx-font-size: 12px; -fx-text-fill: #64748b;");
 
-        VBox progressContent = new VBox(10, progressBar, progressLabel);
-        progressContent.setAlignment(javafx.geometry.Pos.CENTER);
-        progressAlert.getDialogPane().setExpandableContent(progressContent);
-        progressAlert.getDialogPane().setExpanded(true);
+        VBox contentBox = new VBox(15, statusLabel, progressBar, detailLabel);
+        contentBox.setAlignment(javafx.geometry.Pos.CENTER);
+        contentBox.setPadding(new javafx.geometry.Insets(20));
 
+        progressAlert.getDialogPane().setContent(contentBox);
         progressAlert.show();
 
-        // Download in background thread to keep UI responsive
+        // Download in background thread
         new Thread(() -> {
             try {
                 java.nio.file.Path installerPath = appUpdateService.downloadUpdate(progress -> {
-                    // Update progress bar on JavaFX thread
                     javafx.application.Platform.runLater(() -> {
-                        progressBar.setProgress(progress);
-                        int percent = (int) (progress * 100);
-                        progressLabel.setText("Downloading... " + percent + "%");
-                        if (progress >= 1.0) {
-                            progressAlert.setHeaderText("\u2705 Download Complete!");
-                            progressLabel.setText("Launching installer...");
+                        if (progress < 0) {
+                            // Indeterminate mode if size is unknown
+                            progressBar.setProgress(javafx.scene.control.ProgressBar.INDETERMINATE_PROGRESS);
+                            statusLabel.setText("Downloading... (Size unknown)");
+                        } else {
+                            progressBar.setProgress(progress);
+                            int percent = (int) (progress * 100);
+                            statusLabel.setText("Downloading... " + percent + "%");
                         }
+                        detailLabel.setText("Retrieving files from cloud server...");
                     });
                 });
 
-                // Download complete — launch installer on JavaFX thread
                 javafx.application.Platform.runLater(() -> {
+                    progressAlert.close();
+                    
+                    Alert launchAlert = new Alert(Alert.AlertType.INFORMATION);
+                    launchAlert.setTitle("Download Ready");
+                    launchAlert.setHeaderText("\u2705 Ready to Install");
+                    launchAlert.setContentText("The update has been downloaded.\n\nThe application will now close and the installer will start.\nPlease follow the Windows prompts to complete the setup.");
+                    launchAlert.showAndWait();
+
                     try {
-                        progressAlert.close();
-
-                        // Show final confirmation
-                        Alert launchAlert = new Alert(Alert.AlertType.INFORMATION);
-                        launchAlert.setTitle("Update Ready");
-                        launchAlert.setHeaderText("\u2705 Update Downloaded Successfully!");
-                        launchAlert.setContentText(
-                                "The update has been downloaded.\n\n"
-                                + "The application will now close and the installer will start.\n"
-                                + "Please follow the installer instructions to complete the update.");
-                        launchAlert.showAndWait();
-
-                        // Launch the installer and exit
                         appUpdateService.launchInstallerAndExit(installerPath);
-
                     } catch (Exception e) {
-                        showUpdateError("Failed to launch the installer: " + e.getMessage());
+                        showUpdateError("Failed to start installer: " + e.getMessage());
                     }
                 });
 
             } catch (Exception e) {
                 javafx.application.Platform.runLater(() -> {
                     progressAlert.close();
-                    showUpdateError("Download failed: " + e.getMessage()
-                            + "\n\nPlease check your internet connection and try again,"
-                            + "\nor contact your administrator for manual installation.");
+                    showUpdateError("Download interrupted: " + e.getMessage());
                 });
             }
-        }, "UpdateDownloadThread").start();
+        }, "OTA-Update-Thread").start();
     }
 
     /**

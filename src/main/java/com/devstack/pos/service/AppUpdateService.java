@@ -64,7 +64,9 @@ public class AppUpdateService {
             }
 
             String latestVersion = settings.getLatestAppVersion().trim();
-            boolean isNewer = compareVersions(latestVersion, currentAppVersion) > 0;
+            String current = currentAppVersion != null ? currentAppVersion.trim() : "1.0.0";
+            
+            boolean isNewer = compareVersions(latestVersion, current) > 0;
 
             if (isNewer) {
                 log.info("Update available! Current: v{}, Latest: v{}", 
@@ -199,9 +201,15 @@ public class AppUpdateService {
                     downloaded += bytesRead;
 
                     // Report progress
-                    if (finalTotalSize > 0 && progressCallback != null) {
-                        double progress = (double) downloaded / finalTotalSize;
-                        progressCallback.accept(Math.min(progress, 1.0));
+                    if (progressCallback != null) {
+                        if (finalTotalSize > 0) {
+                            double progress = (double) downloaded / finalTotalSize;
+                            progressCallback.accept(Math.min(progress, 1.0));
+                        } else {
+                            // If size unknown, send a special value or just alternate tiny progress
+                            // to keep UI moving. -1.0 can signal indeterminate mode in some UIs.
+                            progressCallback.accept(-1.0); 
+                        }
                     }
                 }
             } finally {
