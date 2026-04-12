@@ -349,12 +349,22 @@ public class LoginFormController implements Initializable {
                 });
 
                 javafx.application.Platform.runLater(() -> {
-                    progressAlert.close();
+                    // 1. Force close the progress dialog first
+                    if (progressAlert.isShowing()) {
+                        progressAlert.setResult(javafx.scene.control.ButtonType.OK);
+                        progressAlert.close();
+                    }
                     
+                    // 2. Clear the dialog background artifacts
+                    progressAlert.getDialogPane().getScene().getWindow().hide();
+
+                    // 3. Show the final instruction
                     Alert launchAlert = new Alert(Alert.AlertType.INFORMATION);
-                    launchAlert.setTitle("Download Ready");
+                    launchAlert.setTitle("Download Complete");
                     launchAlert.setHeaderText("\u2705 Ready to Install");
-                    launchAlert.setContentText("The update has been downloaded.\n\nThe application will now close and the installer will start.\nPlease follow the Windows prompts to complete the setup.");
+                    launchAlert.setContentText("The update has been downloaded.\n\n" +
+                            "IMPORTANT: The application will now close and the Windows Installer will start.\n" +
+                            "Please follow the prompts in the installer window to finish the update.");
                     launchAlert.showAndWait();
 
                     try {

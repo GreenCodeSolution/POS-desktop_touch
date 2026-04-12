@@ -241,22 +241,13 @@ public class AppUpdateService {
             throw new IOException("Installer file not found: " + installerPath);
         }
 
-        // Launch the installer as a separate process
-        // The /passive flag runs the installer with a progress bar but no user interaction
-        // Remove /passive if you want the full installer wizard
-        ProcessBuilder pb = new ProcessBuilder(installerPath.toString());
+        // On Windows, use 'cmd /c start' to launch the installer 
+        // as a completely separate process so we can exit safely.
+        String[] cmd = {"cmd", "/c", "start", "/wait", installerPath.toString()};
+        
+        ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.directory(installerPath.getParent().toFile());
-        pb.inheritIO();
         pb.start();
-
-        log.info("Installer launched. Exiting current application...");
-
-        // Give the installer a moment to start
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
 
         // Exit the app so the installer can replace files
         javafx.application.Platform.exit();

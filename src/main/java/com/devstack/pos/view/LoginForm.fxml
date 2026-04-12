@@ -12,7 +12,7 @@
       stylesheets="@styles/modern-touch.css" styleClass="background-touch" spacing="0">
     <children>
         <!-- Blue Header Bar -->
-    <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #a14f4f; -fx-padding: 15 40;">
+    <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #9d9fa5; -fx-padding: 15 40;">
         <Text text="QuickPOS" style="-fx-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
         <Region HBox.hgrow="ALWAYS"/>
         <HBox alignment="CENTER" spacing="15">
