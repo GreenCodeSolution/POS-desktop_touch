@@ -9,9 +9,11 @@ import java.util.Optional;
 @Repository
 public interface SystemSettingsRepository extends JpaRepository<SystemSettings, Long> {
     
-    Optional<SystemSettings> findByIsActiveTrue();
+    Optional<SystemSettings> findFirstByIsActiveTrue();
     
     boolean existsByIsActiveTrue();
+
+    Optional<SystemSettings> findFirstByBusinessId(Long businessId);
 
     Optional<SystemSettings> findByBusinessId(Long businessId);
 }

@@ -28,6 +28,8 @@
                     <Pane prefWidth="8" prefHeight="8" style="-fx-background-color: #10b981; -fx-background-radius: 50;"/>
                     <Text text="System Online" style="-fx-fill: #e2e8f0; -fx-font-size: 13px; -fx-font-weight: bold;"/>
                 </HBox>
+                <JFXButton text="Disconnect" onAction="#btnUnpairTerminalOnAction" 
+                           style="-fx-background-color: rgba(239,68,68,0.15); -fx-text-fill: #f87171; -fx-font-size: 11px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-border-color: rgba(239,68,68,0.3); -fx-border-radius: 8; -fx-padding: 6 12; -fx-cursor: hand;"/>
             </HBox>
         </HBox>
 

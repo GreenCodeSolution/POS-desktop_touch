@@ -64,4 +64,59 @@ public class TerminalService {
 
         return updatedTerminal;
     }
+
+    @Transactional(readOnly = true)
+    public boolean isTerminalValid() {
+        if (!TerminalConfigManager.isPaired()) {
+            return false;
+        }
+
+        Long businessId = TerminalConfigManager.getBusinessId();
+        Long terminalId = TerminalConfigManager.getTerminalId();
+
+        if (businessId == null || terminalId == null) {
+            System.err.println(">>> Terminal configuration missing businessId or terminalId. Unpairing...");
+            TerminalConfigManager.unpair();
+            return false;
+        }
+
+        // 1. Verify business exists and is ACTIVE
+        var bizOpt = businessRepository.findById(businessId);
+        if (bizOpt.isEmpty()) {
+            System.err.println(">>> Business #" + businessId + " no longer exists in DB. Clearing cached terminal...");
+            TerminalConfigManager.unpair();
+            return false;
+        }
+
+        Business business = bizOpt.get();
+        if (!"ACTIVE".equalsIgnoreCase(business.getStatus())) {
+            System.err.println(">>> Business #" + businessId + " is " + business.getStatus() + ". Clearing cached terminal...");
+            TerminalConfigManager.unpair();
+            return false;
+        }
+
+        // 2. Verify terminal exists and is ACTIVE
+        var termOpt = terminalRepository.findById(terminalId);
+        if (termOpt.isEmpty()) {
+            System.err.println(">>> Terminal #" + terminalId + " no longer exists in DB. Clearing cached terminal...");
+            TerminalConfigManager.unpair();
+            return false;
+        }
+
+        PosTerminal terminal = termOpt.get();
+        if (!"ACTIVE".equalsIgnoreCase(terminal.getStatus())) {
+            System.err.println(">>> Terminal #" + terminalId + " status is " + terminal.getStatus() + ". Clearing cached terminal...");
+            TerminalConfigManager.unpair();
+            return false;
+        }
+
+        // 3. Verify terminal belongs to the business
+        if (terminal.getBusiness() == null || !terminal.getBusiness().getId().equals(businessId)) {
+            System.err.println(">>> Terminal #" + terminalId + " does not belong to business #" + businessId + ". Clearing cached terminal...");
+            TerminalConfigManager.unpair();
+            return false;
+        }
+
+        return true;
+    }
 }

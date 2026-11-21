@@ -20,6 +20,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import com.jfoenix.controls.JFXPasswordField;
 import javafx.scene.control.ButtonBar;
@@ -62,12 +63,21 @@ public class LoginFormController implements Initializable {
     private final SessionManager sessionManager;
     private final TrialService trialService;
     private final AppUpdateService appUpdateService;
+    private final com.devstack.pos.service.TerminalService terminalService;
     
     private AppUser selectedUser;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         System.out.println("DEBUG: LoginFormController.initialize() called");
+
+        // Validate terminal status against DB
+        if (!terminalService.isTerminalValid()) {
+            System.err.println("Terminal is no longer valid in database. Clearing cache and redirecting to activation...");
+            TerminalConfigManager.unpair();
+            javafx.application.Platform.runLater(this::navigateToActivation);
+            return;
+        }
         
         // Start real-time clock
         initClock();
@@ -453,6 +463,14 @@ public class LoginFormController implements Initializable {
 
     public void btnSignInOnAction(ActionEvent actionEvent) {
         try {
+            // Live validation: ensure terminal is still active and registered
+            if (!terminalService.isTerminalValid()) {
+                TerminalConfigManager.unpair();
+                new Alert(Alert.AlertType.ERROR, "This register or business has been suspended or removed in the Web Admin Portal.\nTerminal disconnected.").showAndWait();
+                navigateToActivation();
+                return;
+            }
+
             // Check trial version status before allowing login
             if (trialService.isTrialEnabled() && trialService.isTrialExpired()) {
                 Alert trialAlert = new Alert(Alert.AlertType.ERROR);
@@ -557,6 +575,40 @@ public class LoginFormController implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
             new Alert(Alert.AlertType.ERROR, e.getMessage()).show();
+        }
+    }
+
+    @javafx.fxml.FXML
+    public void btnUnpairTerminalOnAction(ActionEvent event) {
+        Alert confirm = new Alert(Alert.AlertType.CONFIRMATION);
+        confirm.setTitle("Disconnect Terminal");
+        confirm.setHeaderText("Unpair Register from " + TerminalConfigManager.getBusinessName());
+        confirm.setContentText("Are you sure you want to disconnect this register from this business?\nYou will need the Business Code and Pairing Key to reconnect.");
+        
+        if (confirm.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK) {
+            TerminalConfigManager.unpair();
+            navigateToActivation();
+        }
+    }
+
+    private void navigateToActivation() {
+        try {
+            Stage stage = com.devstack.pos.Initialize.getPrimaryStage();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/devstack/pos/view/TerminalActivationForm.fxml"));
+            loader.setControllerFactory(com.devstack.pos.Initialize.getSpringContext()::getBean);
+            Scene scene = new Scene(loader.load());
+
+            var cssUrl = getClass().getResource("/com/devstack/pos/view/styles/pos-styles.css");
+            if (cssUrl != null) {
+                scene.getStylesheets().add(cssUrl.toExternalForm());
+            }
+
+            stage.setScene(scene);
+            stage.setTitle("KumaraPOS - Terminal Setup");
+            stage.setMaximized(true);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

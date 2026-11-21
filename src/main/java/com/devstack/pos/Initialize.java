@@ -98,7 +98,16 @@ public class Initialize extends Application {
     }
 
     private void loadLoginScreen() throws IOException {
-        String fxmlFile = TerminalConfigManager.isPaired() 
+        boolean valid = false;
+        try {
+            com.devstack.pos.service.TerminalService terminalService = springContext.getBean(com.devstack.pos.service.TerminalService.class);
+            valid = terminalService.isTerminalValid();
+        } catch (Exception e) {
+            System.err.println("Terminal validation error on startup: " + e.getMessage());
+            valid = TerminalConfigManager.isPaired();
+        }
+
+        String fxmlFile = valid 
                 ? "/com/devstack/pos/view/LoginForm.fxml" 
                 : "/com/devstack/pos/view/TerminalActivationForm.fxml";
 
@@ -121,7 +130,7 @@ public class Initialize extends Application {
         }
 
         primaryStage.setScene(scene);
-        primaryStage.setTitle("KumaraPOS - " + (TerminalConfigManager.isPaired() ? TerminalConfigManager.getBusinessName() : "Terminal Setup"));
+        primaryStage.setTitle("KumaraPOS - " + (valid ? TerminalConfigManager.getBusinessName() : "Terminal Setup"));
         primaryStage.setMaximized(true);
         primaryStage.show();
         primaryStage.toFront();
