@@ -74,17 +74,23 @@ public class UserService {
         List<AppUser> cashiers = allUsers.stream()
                 .filter(user -> {
                     // Filter by businessId if specified
-                    if (businessId != null && user.getBusinessId() != null && !user.getBusinessId().equals(businessId)) {
-                        return false;
+                    if (businessId != null) {
+                        if (user.getBusinessId() == null || !user.getBusinessId().equals(businessId)) {
+                            return false;
+                        }
                     }
                     // Be lenient with status: ACTIVE or null (assuming active)
                     boolean isActive = user.getStatus() == null || "ACTIVE".equalsIgnoreCase(user.getStatus());
                     
-                    // Check if any role matches 'CASHIER' or 'ROLE_CASHIER'
-                    boolean isCashier = user.getRoles().stream()
-                            .anyMatch(role -> role.getName().toUpperCase().contains("CASHIER"));
+                    // Allow CASHIER or Store ADMIN (exclude platform SUPER_ADMIN)
+                    boolean isEligible = user.getRoles().stream()
+                            .anyMatch(role -> {
+                                String name = role.getName().toUpperCase();
+                                if (name.contains("SUPER")) return false;
+                                return name.contains("CASHIER") || name.contains("ADMIN");
+                            });
                     
-                    return isActive && isCashier;
+                    return isActive && isEligible;
                 })
                 .collect(Collectors.toList());
         

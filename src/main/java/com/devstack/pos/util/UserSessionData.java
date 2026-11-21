@@ -15,7 +15,9 @@ public class UserSessionData {
 
     public static boolean isCashier() {
         return userRoles.stream().anyMatch(role -> role.equalsIgnoreCase("ROLE_CASHIER") ||
-                role.equalsIgnoreCase("CASHIER"));
+                role.equalsIgnoreCase("CASHIER") ||
+                role.equalsIgnoreCase("ROLE_ADMIN") ||
+                role.equalsIgnoreCase("ADMIN"));
     }
 
     /**
