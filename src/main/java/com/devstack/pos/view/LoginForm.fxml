@@ -14,9 +14,9 @@
     <children>
         <!-- Premium Header Bar -->
         <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #0f172a; -fx-padding: 18 50; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 2);">
-            <HBox alignment="CENTER" spacing="12">
-<!--                <Pane prefWidth="35" prefHeight="35" style="-fx-background-color: #2563eb; -fx-background-radius: 8;"/>-->
-                <Text text="QuickPOS" style="-fx-fill: white; -fx-font-size: 26px; -fx-font-weight: bold;"/>
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Text fx:id="lblStoreName" text="QuickPOS" style="-fx-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+                <Text fx:id="lblTerminalName" text="• Register" style="-fx-fill: #94a3b8; -fx-font-size: 14px;"/>
             </HBox>
             <Region HBox.hgrow="ALWAYS"/>
             <HBox alignment="CENTER" spacing="25">

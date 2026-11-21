@@ -8,6 +8,10 @@ public class UserSessionData {
     public static java.util.Set<String> userRoles = new java.util.HashSet<>();
     public static java.util.Set<String> permissions = new java.util.HashSet<>();
     public static LocalDateTime lastActivityTime = null;
+    public static Long businessId = null;
+    public static String businessName = "";
+    public static Long terminalId = null;
+    public static String terminalName = "";
 
     public static boolean isCashier() {
         return userRoles.stream().anyMatch(role -> role.equalsIgnoreCase("ROLE_CASHIER") ||
@@ -63,6 +67,10 @@ public class UserSessionData {
         jwtToken = "";
         userRoles.clear();
         permissions.clear();
+        businessId = null;
+        businessName = "";
+        terminalId = null;
+        terminalName = "";
         lastActivityTime = null;
     }
 

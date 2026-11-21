@@ -18,6 +18,9 @@ public class ReturnOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
+
+    @Column(name = "business_id")
+    private Long businessId;
     
     @Column(name = "return_id", unique = true, nullable = false)
     private String returnId;

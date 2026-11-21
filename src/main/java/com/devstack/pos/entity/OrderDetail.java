@@ -18,6 +18,12 @@ public class OrderDetail {
     @Column(name = "code")
     private Long code;
 
+    @Column(name = "business_id")
+    private Long businessId;
+
+    @Column(name = "terminal_id")
+    private Long terminalId;
+
     @Column(name = "issued_date", nullable = false)
     private LocalDateTime issuedDate;
 

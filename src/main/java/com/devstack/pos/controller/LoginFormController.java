@@ -14,6 +14,7 @@ import com.devstack.pos.service.TrialService;
 import com.devstack.pos.service.UserService;
 import com.devstack.pos.util.JwtUtil;
 import com.devstack.pos.util.StageManager;
+import com.devstack.pos.util.TerminalConfigManager;
 import com.devstack.pos.util.UserSessionData;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXMLLoader;
@@ -53,6 +54,8 @@ public class LoginFormController implements Initializable {
     public Text lblTime;
     public Text lblDate;
     public Text lblAppVersion;
+    public Text lblStoreName;
+    public Text lblTerminalName;
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
@@ -76,6 +79,11 @@ public class LoginFormController implements Initializable {
         // Load active cashiers into the profile selection area
         loadCashierProfiles();
         lblAppVersion.setText("v" + appUpdateService.getCurrentVersion());
+        
+        if (TerminalConfigManager.isPaired()) {
+            if (lblStoreName != null) lblStoreName.setText(TerminalConfigManager.getBusinessName());
+            if (lblTerminalName != null) lblTerminalName.setText("• " + TerminalConfigManager.getTerminalName());
+        }
         
         // Ensure dots are initialized
         updatePinDots();
@@ -473,6 +481,10 @@ public class LoginFormController implements Initializable {
                 // Store JWT token
                 UserSessionData.jwtToken = jwtToken;
                 UserSessionData.email = userToLogin.getEmail();
+                UserSessionData.businessId = TerminalConfigManager.getBusinessId();
+                UserSessionData.businessName = TerminalConfigManager.getBusinessName();
+                UserSessionData.terminalId = TerminalConfigManager.getTerminalId();
+                UserSessionData.terminalName = TerminalConfigManager.getTerminalName();
 
                 // Extract and store user roles from JWT token
                 java.util.List<String> roles = jwtUtil.getRolesFromToken(jwtToken);

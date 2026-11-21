@@ -31,6 +31,9 @@ public class AppUser {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "business_id")
+    private Long businessId;
+
     @Builder.Default
     private String status = Status.ACTIVE.name();
 

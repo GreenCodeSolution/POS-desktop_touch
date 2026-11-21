@@ -4,6 +4,7 @@ import com.devstack.pos.entity.*;
 import com.devstack.pos.service.*;
 import com.devstack.pos.util.AuthorizationUtil;
 import com.devstack.pos.util.ReceiptPrinter;
+import com.devstack.pos.util.TerminalConfigManager;
 import com.devstack.pos.util.UserSessionData;
 import com.devstack.pos.view.tm.CartTm;
 import com.jfoenix.controls.JFXButton;
@@ -656,6 +657,8 @@ public class PlaceOrderFormController extends BaseController {
                     + billDiscountAmount;
 
             OrderDetail orderDetail = new OrderDetail();
+            orderDetail.setBusinessId(TerminalConfigManager.getBusinessId());
+            orderDetail.setTerminalId(TerminalConfigManager.getTerminalId());
             orderDetail.setIssuedDate(LocalDateTime.now());
             orderDetail.setDiscount(orderTotalDiscount);
             orderDetail.setTotalCost(finalTotal);

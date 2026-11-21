@@ -12,5 +12,7 @@ public interface SystemSettingsRepository extends JpaRepository<SystemSettings, 
     Optional<SystemSettings> findByIsActiveTrue();
     
     boolean existsByIsActiveTrue();
+
+    Optional<SystemSettings> findByBusinessId(Long businessId);
 }
 

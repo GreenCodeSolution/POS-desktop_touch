@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "product")
+@Table(name = "product", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_business_barcode", columnNames = {"business_id", "barcode"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,10 +19,13 @@ public class Product {
     @Column(name = "code")
     private Integer code;
 
+    @Column(name = "business_id")
+    private Long businessId;
+
     @Column(name = "description", nullable = false, length = 200)
     private String description;
 
-    @Column(name = "barcode", unique = true, length = 100)
+    @Column(name = "barcode", length = 100)
     private String barcode;
 
     @ManyToOne(fetch = FetchType.EAGER)

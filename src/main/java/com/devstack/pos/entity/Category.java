@@ -7,7 +7,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "category")
+@Table(name = "category", uniqueConstraints = {
+    @UniqueConstraint(name = "uk_business_category_name", columnNames = {"business_id", "name"})
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -17,7 +19,10 @@ public class Category {
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "name", nullable = false, unique = true, length = 100)
+    @Column(name = "business_id")
+    private Long businessId;
+
+    @Column(name = "name", nullable = false, length = 100)
     private String name;
 
     @Enumerated(EnumType.STRING)

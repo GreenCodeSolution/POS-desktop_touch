@@ -12,5 +12,7 @@ public interface UserRepository extends JpaRepository<AppUser, Integer> {
 
     boolean existsByEmail(String email);
 
+    java.util.List<AppUser> findByBusinessId(Long businessId);
+
     java.util.List<AppUser> findByRolesContaining(com.devstack.pos.entity.Role role);
 }

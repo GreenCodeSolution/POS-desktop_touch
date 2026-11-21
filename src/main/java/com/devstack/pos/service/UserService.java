@@ -4,6 +4,7 @@ import com.devstack.pos.entity.AppUser;
 import com.devstack.pos.entity.Role;
 import com.devstack.pos.repository.RoleRepository;
 import com.devstack.pos.repository.UserRepository;
+import com.devstack.pos.util.TerminalConfigManager;
 import com.devstack.pos.util.JwtUtil;
 import com.devstack.pos.view.tm.TokenRequest;
 import lombok.RequiredArgsConstructor;
@@ -66,13 +67,16 @@ public class UserService {
         }
     }
 
-    public List<AppUser> findActiveCashiers() {
-        System.out.println("DEBUG: findActiveCashiers() called");
+    public List<AppUser> findActiveCashiers(Long businessId) {
+        System.out.println("DEBUG: findActiveCashiers() called for business: " + businessId);
         List<AppUser> allUsers = userRepository.findAll();
-        System.out.println("DEBUG: Total users found in DB: " + allUsers.size());
         
         List<AppUser> cashiers = allUsers.stream()
                 .filter(user -> {
+                    // Filter by businessId if specified
+                    if (businessId != null && user.getBusinessId() != null && !user.getBusinessId().equals(businessId)) {
+                        return false;
+                    }
                     // Be lenient with status: ACTIVE or null (assuming active)
                     boolean isActive = user.getStatus() == null || "ACTIVE".equalsIgnoreCase(user.getStatus());
                     
@@ -86,5 +90,9 @@ public class UserService {
         
         System.out.println("DEBUG: Total cashiers filtered: " + cashiers.size());
         return cashiers;
+    }
+
+    public List<AppUser> findActiveCashiers() {
+        return findActiveCashiers(TerminalConfigManager.getBusinessId());
     }
 }

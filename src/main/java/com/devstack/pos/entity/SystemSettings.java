@@ -16,6 +16,9 @@ public class SystemSettings {
     @Column(name = "id")
     private Long id;
 
+    @Column(name = "business_id")
+    private Long businessId;
+
     @Column(name = "business_name", length = 200)
     private String businessName;
 

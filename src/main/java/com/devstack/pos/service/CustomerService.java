@@ -2,6 +2,7 @@ package com.devstack.pos.service;
 
 import com.devstack.pos.entity.Customer;
 import com.devstack.pos.repository.CustomerRepository;
+import com.devstack.pos.util.TerminalConfigManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,10 @@ public class CustomerService {
     }
     
     public List<Customer> findAllCustomers() {
+        Long businessId = TerminalConfigManager.getBusinessId();
+        if (businessId != null) {
+            return customerRepository.findByBusinessIdOrderByIdAsc(businessId);
+        }
         return customerRepository.findAll();
     }
     

@@ -16,6 +16,9 @@ public class Customer {
     @Column(name = "id")
     private Long id;
 
+    @Column(name = "business_id")
+    private Long businessId;
+
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 

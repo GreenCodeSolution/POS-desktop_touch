@@ -20,6 +20,9 @@ public class ProductDetail {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id; // Batch Code / Batch ID
 
+    @Column(name = "business_id")
+    private Long businessId;
+
     @Column(name = "code", length = 100)
     private String code; // Batch Code / Batch ID
 

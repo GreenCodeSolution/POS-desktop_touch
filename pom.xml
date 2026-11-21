@@ -217,6 +217,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <mainClass>com.devstack.pos.PosApplication</mainClass>
+                    <jvmArguments>--add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.reflect=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.desktop/java.awt=ALL-UNNAMED --add-opens=java.desktop/sun.awt=ALL-UNNAMED --add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED --add-opens=javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED --add-opens=javafx.base/com.sun.javafx.binding=ALL-UNNAMED --add-opens=javafx.graphics/com.sun.javafx.stage=ALL-UNNAMED</jvmArguments>
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -240,6 +241,17 @@
                 </executions>
                 <configuration>
                     <mainClass>com.devstack.pos.PosApplication</mainClass>
+                    <options>
+                        <option>--add-opens=java.base/java.lang=ALL-UNNAMED</option>
+                        <option>--add-opens=java.base/java.lang.reflect=ALL-UNNAMED</option>
+                        <option>--add-opens=java.base/java.util=ALL-UNNAMED</option>
+                        <option>--add-opens=java.desktop/java.awt=ALL-UNNAMED</option>
+                        <option>--add-opens=java.desktop/sun.awt=ALL-UNNAMED</option>
+                        <option>--add-opens=javafx.controls/javafx.scene.control.skin=ALL-UNNAMED</option>
+                        <option>--add-opens=javafx.controls/com.sun.javafx.scene.control=ALL-UNNAMED</option>
+                        <option>--add-opens=javafx.base/com.sun.javafx.binding=ALL-UNNAMED</option>
+                        <option>--add-opens=javafx.graphics/com.sun.javafx.stage=ALL-UNNAMED</option>
+                    </options>
                 </configuration>
             </plugin>
 

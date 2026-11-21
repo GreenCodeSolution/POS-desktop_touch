@@ -1,5 +1,6 @@
 package com.devstack.pos;
 
+import com.devstack.pos.util.TerminalConfigManager;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -97,11 +98,15 @@ public class Initialize extends Application {
     }
 
     private void loadLoginScreen() throws IOException {
+        String fxmlFile = TerminalConfigManager.isPaired() 
+                ? "/com/devstack/pos/view/LoginForm.fxml" 
+                : "/com/devstack/pos/view/TerminalActivationForm.fxml";
+
         FXMLLoader loader = new FXMLLoader();
-        var fxmlUrl = getClass().getResource("/com/devstack/pos/view/LoginForm.fxml");
+        var fxmlUrl = getClass().getResource(fxmlFile);
 
         if (fxmlUrl == null) {
-            throw new IOException("Could not find LoginForm.fxml");
+            throw new IOException("Could not find " + fxmlFile);
         }
 
         loader.setLocation(fxmlUrl);
@@ -116,7 +121,7 @@ public class Initialize extends Application {
         }
 
         primaryStage.setScene(scene);
-        primaryStage.setTitle("KumaraPOS - Point of Sale");
+        primaryStage.setTitle("KumaraPOS - " + (TerminalConfigManager.isPaired() ? TerminalConfigManager.getBusinessName() : "Terminal Setup"));
         primaryStage.setMaximized(true);
         primaryStage.show();
         primaryStage.toFront();
