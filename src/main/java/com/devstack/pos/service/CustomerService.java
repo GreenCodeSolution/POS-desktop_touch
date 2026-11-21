@@ -57,6 +57,10 @@ public class CustomerService {
         if (search == null || search.trim().isEmpty()) {
             return findAllCustomers();
         }
+        Long businessId = TerminalConfigManager.getBusinessId();
+        if (businessId != null) {
+            return customerRepository.searchCustomersByBusiness(businessId, search.trim());
+        }
         return customerRepository.searchCustomers(search.trim());
     }
     
@@ -64,7 +68,12 @@ public class CustomerService {
         if (contact == null || contact.trim().isEmpty()) {
             return null;
         }
-        List<Customer> customers = customerRepository.searchCustomers(contact.trim());
+        List<Customer> customers = searchCustomers(contact.trim());
+        for (Customer c : customers) {
+            if (c.getContact() != null && c.getContact().trim().equalsIgnoreCase(contact.trim())) {
+                return c;
+            }
+        }
         return customers.isEmpty() ? null : customers.get(0);
     }
 }

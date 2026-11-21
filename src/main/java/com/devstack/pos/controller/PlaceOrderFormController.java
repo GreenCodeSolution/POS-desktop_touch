@@ -23,6 +23,9 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.geometry.Pos;
+import javafx.geometry.Bounds;
+import javafx.animation.PauseTransition;
+import javafx.util.Duration;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -80,6 +83,7 @@ public class PlaceOrderFormController extends BaseController {
     private final ReceiptPrinter receiptPrinter;
     private final SystemSettingsService systemSettingsService;
     private final CategoryService categoryService;
+    private final NotifyLkSmsService notifyLkSmsService;
     private boolean isUpdatingBarcodeProgrammatically = false;
     private Integer activeCategoryId = null;
 
@@ -151,6 +155,7 @@ public class PlaceOrderFormController extends BaseController {
 
         setupBarcodeScannerDetection();
         setupQuantityInputValidation();
+        setupCustomerAutocomplete();
         loadCategories();
         loadAllProducts(null, null);
     }
@@ -333,15 +338,91 @@ public class PlaceOrderFormController extends BaseController {
         stage.show();
     }
 
+    private final ContextMenu customerPopup = new ContextMenu();
+    private boolean isSelectingCustomerProgrammatically = false;
+
+    private void setupCustomerAutocomplete() {
+        customerPopup.setAutoHide(true);
+
+        txtContact.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (isSelectingCustomerProgrammatically) {
+                return;
+            }
+            if (newValue == null || newValue.trim().length() < 2) {
+                customerPopup.hide();
+                if (newValue == null || newValue.trim().isEmpty()) {
+                    selectedCustomerId = null;
+                    txtName.setText("Walk-in Customer");
+                    availableLoyaltyPoints = 0.0;
+                    txtCustomerLoyaltyPoints.setText("Aval: 0.0");
+                }
+                return;
+            }
+
+            String query = newValue.trim();
+            List<Customer> matches = customerService.searchCustomers(query);
+            if (matches == null || matches.isEmpty()) {
+                customerPopup.hide();
+                return;
+            }
+
+            customerPopup.getItems().clear();
+            int count = 0;
+            for (Customer c : matches) {
+                if (count++ >= 6) break;
+
+                String phone = (c.getContact() != null) ? c.getContact() : "";
+                String name = (c.getName() != null) ? c.getName() : "Unknown";
+                double pts = c.getLoyaltyPoints();
+
+                Label itemLabel = new Label(String.format("📞 %s  —  %s  (%.1f Pts)", phone, name, pts));
+                itemLabel.setStyle("-fx-font-size: 14px; -fx-padding: 8 16; -fx-font-weight: bold; -fx-text-fill: #1e293b;");
+
+                CustomMenuItem item = new CustomMenuItem(itemLabel, true);
+                item.setOnAction(e -> selectCustomer(c));
+                customerPopup.getItems().add(item);
+            }
+
+            if (!customerPopup.getItems().isEmpty() && txtContact.getScene() != null && txtContact.getScene().getWindow() != null) {
+                Bounds bounds = txtContact.localToScreen(txtContact.getBoundsInLocal());
+                if (bounds != null) {
+                    customerPopup.show(txtContact, bounds.getMinX(), bounds.getMaxY());
+                }
+            } else {
+                customerPopup.hide();
+            }
+        });
+
+        txtContact.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) {
+                PauseTransition pause = new PauseTransition(Duration.millis(250));
+                pause.setOnFinished(e -> customerPopup.hide());
+                pause.play();
+            }
+        });
+    }
+
+    private void selectCustomer(Customer customer) {
+        if (customer == null) return;
+        isSelectingCustomerProgrammatically = true;
+        try {
+            selectedCustomerId = customer.getId();
+            txtContact.setText(customer.getContact() != null ? customer.getContact() : "");
+            txtName.setText(customer.getName() != null ? customer.getName() : "Customer");
+            availableLoyaltyPoints = customer.getLoyaltyPoints();
+            txtCustomerLoyaltyPoints.setText(String.format("Aval: %.1f", availableLoyaltyPoints));
+            customerPopup.hide();
+            txtBarcode.requestFocus();
+        } finally {
+            isSelectingCustomerProgrammatically = false;
+        }
+    }
+
     public void searchCustomer(ActionEvent actionEvent) {
         try {
             Customer customer = customerService.findByContact(txtContact.getText().trim());
             if (customer != null) {
-                selectedCustomerId = customer.getId();
-                txtName.setText(customer.getName());
-                availableLoyaltyPoints = customer.getLoyaltyPoints();
-                txtCustomerLoyaltyPoints.setText(String.format("Aval: %.1f", availableLoyaltyPoints));
-                txtBarcode.requestFocus();
+                selectCustomer(customer);
             } else {
                 new Alert(Alert.AlertType.WARNING, "Customer not found (Press Enter to search again or Add New)")
                         .show();
@@ -696,12 +777,14 @@ public class PlaceOrderFormController extends BaseController {
             OrderDetail savedOrder = orderDetailService.saveOrderDetail(orderDetail);
 
             // Update customer loyalty points if customer is selected
+            Double totalCustomerPoints = null;
             if (selectedCustomerId != null) {
                 Customer customer = customerService.findCustomer(selectedCustomerId);
                 if (customer != null) {
                     double newPoints = customer.getLoyaltyPoints() - pointsToUse + pointsEarned;
                     customer.setLoyaltyPoints(newPoints);
                     customerService.updateCustomer(customer);
+                    totalCustomerPoints = newPoints;
                 }
             }
 
@@ -730,6 +813,35 @@ public class PlaceOrderFormController extends BaseController {
 
             // Store the completed order ID so the Print button can use it - matches Kumara Enterprises
             lastCompletedOrderId = savedOrder.getCode();
+
+            // Dispatch customer SMS receipt via Notify.lk asynchronously (non-blocking)
+            String customerContact = null;
+            String customerName = txtName.getText();
+            if (selectedCustomerId != null) {
+                Customer c = customerService.findCustomer(selectedCustomerId);
+                if (c != null) {
+                    customerContact = c.getContact();
+                    if (c.getName() != null && !c.getName().isBlank()) {
+                        customerName = c.getName();
+                    }
+                }
+            }
+            if ((customerContact == null || customerContact.isBlank()) && txtContact != null) {
+                customerContact = txtContact.getText();
+            }
+
+            if (customerContact != null && !customerContact.isBlank()) {
+                notifyLkSmsService.sendOrderReceiptSmsAsync(
+                        customerContact,
+                        customerName,
+                        savedOrder.getCode(),
+                        savedOrder.getTotalCost(),
+                        pointsEarned,
+                        totalCustomerPoints,
+                        TerminalConfigManager.getBusinessName(),
+                        TerminalConfigManager.getBusinessId()
+                );
+            }
 
             // Generate PDF for record keeping (no automatic printing - matches Kumara Enterprises)
             try {
@@ -823,6 +935,7 @@ public class PlaceOrderFormController extends BaseController {
     }
 
     private void clearFields() {
+        customerPopup.hide();
         txtContact.clear();
         txtName.setText("");
         txtBarcode.clear();

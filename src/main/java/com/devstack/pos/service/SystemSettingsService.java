@@ -18,6 +18,10 @@ public class SystemSettingsService {
 
     public SystemSettings getSystemSettings() {
         Long businessId = TerminalConfigManager.getBusinessId();
+        return getSystemSettingsForBusiness(businessId);
+    }
+
+    public SystemSettings getSystemSettingsForBusiness(Long businessId) {
         if (businessId != null) {
             Optional<SystemSettings> bizSettings = systemSettingsRepository.findFirstByBusinessId(businessId);
             if (bizSettings.isPresent()) {

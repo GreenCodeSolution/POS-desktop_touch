@@ -77,6 +77,19 @@ public class SystemSettings {
     @Column(name = "update_download_url", length = 500)
     private String updateDownloadUrl;
 
+    // Notify.lk SMS Notification Settings
+    @Column(name = "sms_enabled")
+    private Boolean smsEnabled = true;
+
+    @Column(name = "sms_user_id", length = 100)
+    private String smsUserId;
+
+    @Column(name = "sms_api_key", length = 255)
+    private String smsApiKey;
+
+    @Column(name = "sms_sender_id", length = 50)
+    private String smsSenderId = "NotifyDEMO";
+
     public SystemSettings(String businessName, String address, String contactNumber,
             String email, String taxNumber, String footerMessage) {
         this.businessName = businessName;
