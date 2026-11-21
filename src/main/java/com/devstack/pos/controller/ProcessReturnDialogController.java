@@ -655,6 +655,7 @@ public class ProcessReturnDialogController {
                             UserSessionData.email != null && !UserSessionData.email.isEmpty() ? UserSessionData.email
                                     : "System")
                     .returnDate(LocalDateTime.now())
+                    .businessId(loadedOrder.getBusinessId())
                     .build();
 
             // Create return order items (supports decimal quantities for items like sand,

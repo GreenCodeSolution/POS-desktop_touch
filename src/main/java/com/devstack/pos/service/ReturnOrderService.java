@@ -21,6 +21,8 @@ public class ReturnOrderService {
     private final ReturnOrderItemService returnOrderItemService;
     private final ProductDetailService productDetailService;
     private final OrderDetailService orderDetailService;
+    private final CustomerService customerService;
+    private final SystemSettingsService systemSettingsService;
 
     public ReturnOrder saveReturnOrder(ReturnOrder returnOrder) {
         return returnOrderRepository.save(returnOrder);
@@ -136,6 +138,41 @@ public class ReturnOrderService {
         Optional<ReturnOrder> optionalReturn = returnOrderRepository.findById(id);
         if (optionalReturn.isPresent()) {
             ReturnOrder returnOrder = optionalReturn.get();
+            Double refundAmountBeforeAdjustment = returnOrder.getRefundAmount();
+
+            // Reverse Customer Loyalty Points earned on returned items
+            try {
+                OrderDetail orderDetail = orderDetailService.findOrderDetail(Long.valueOf(returnOrder.getOrderId()));
+                if (orderDetail != null && refundAmountBeforeAdjustment != null && refundAmountBeforeAdjustment > 0) {
+                    com.devstack.pos.entity.Customer customer = null;
+                    if (orderDetail.getCustomerId() != null) {
+                        customer = customerService.findCustomer(orderDetail.getCustomerId());
+                    } else if (orderDetail.getCustomerName() != null && !orderDetail.getCustomerName().trim().isEmpty() && !"Guest".equalsIgnoreCase(orderDetail.getCustomerName().trim())) {
+                        customer = customerService.findByContact(orderDetail.getCustomerName().trim());
+                    }
+
+                    if (customer != null) {
+                        double rate = 100.0;
+                        var settings = systemSettingsService.getSystemSettingsForBusiness(orderDetail.getBusinessId());
+                        if (settings != null && settings.getLoyaltyPointsRate() != null && settings.getLoyaltyPointsRate() > 0) {
+                            rate = settings.getLoyaltyPointsRate();
+                        }
+                        double pointsToReverse = refundAmountBeforeAdjustment / rate;
+                        double currentPoints = customer.getLoyaltyPoints();
+                        double newPoints = Math.max(0.0, currentPoints - pointsToReverse);
+                        customer.setLoyaltyPoints(newPoints);
+                        customerService.updateCustomer(customer);
+
+                        String currentNotes = returnOrder.getNotes() != null ? returnOrder.getNotes() : "";
+                        String loyaltyNote = String.format(" [Reversed %.2f loyalty points]", pointsToReverse);
+                        returnOrder.setNotes(currentNotes + loyaltyNote);
+                        System.out.println("Reversed " + pointsToReverse + " loyalty points for customer: " + customer.getName() + " on return #" + returnOrder.getReturnId());
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Warning: Failed to reverse loyalty points for return " + id + ": " + e.getMessage());
+                e.printStackTrace();
+            }
 
             // Handle Credit Order Adjustments (Pending Payments)
             try {
