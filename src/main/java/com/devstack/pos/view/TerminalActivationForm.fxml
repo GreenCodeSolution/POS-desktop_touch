@@ -5,101 +5,155 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressIndicator?>
-<?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
 
-<AnchorPane prefHeight="720.0" prefWidth="1080.0" style="-fx-background-color: #0f172a;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.devstack.pos.controller.TerminalActivationController">
-   <children>
-      <StackPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-         <children>
-            <VBox alignment="CENTER" maxWidth="580.0" spacing="24.0" style="-fx-background-color: #ffffff; -fx-background-radius: 20; -fx-padding: 40; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.35), 25, 0, 0, 10);">
-               <children>
-                  <!-- Header Icon / Title -->
-                  <VBox alignment="CENTER" spacing="6.0">
-                     <children>
-                        <Label text="🖥️" style="-fx-font-size: 40px;" />
-                        <Label text="Terminal Setup &amp; Pairing" textFill="#0f172a">
-                           <font>
-                              <Font name="System Bold" size="26.0" />
-                           </font>
-                        </Label>
-                        <Label text="Link this register terminal to your cloud business account" textFill="#64748b">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </Label>
-                     </children>
-                  </VBox>
+<VBox prefHeight="768.0" prefWidth="1200.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.devstack.pos.controller.TerminalActivationController" 
+      stylesheets="@styles/modern-touch.css" styleClass="background-touch" spacing="0">
+    <children>
+        <!-- Header Bar -->
+        <HBox alignment="CENTER_LEFT" spacing="20" style="-fx-background-color: #0f172a; -fx-padding: 18 50; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 2);">
+            <HBox alignment="CENTER_LEFT" spacing="12">
+                <Text text="CloudPOS" style="-fx-fill: white; -fx-font-size: 24px; -fx-font-weight: bold;"/>
+                <Text text="• Hardware Activation Wizard" style="-fx-fill: #94a3b8; -fx-font-size: 14px;"/>
+            </HBox>
+            <Region HBox.hgrow="ALWAYS"/>
+            <HBox alignment="CENTER" spacing="10" style="-fx-background-color: rgba(255,255,255,0.05); -fx-background-radius: 12; -fx-padding: 8 15; -fx-border-color: rgba(255,255,255,0.1); -fx-border-radius: 12;">
+                <Pane prefWidth="8" prefHeight="8" style="-fx-background-color: #38bdf8; -fx-background-radius: 50;"/>
+                <Text text="Register Pairing Mode" style="-fx-fill: #e2e8f0; -fx-font-size: 13px; -fx-font-weight: bold;"/>
+            </HBox>
+        </HBox>
 
-                  <!-- Form Fields -->
-                  <VBox spacing="20.0">
-                     <children>
-                        <VBox spacing="6.0">
-                           <children>
-                              <Label text="Business Code" textFill="#1e293b">
-                                 <font>
-                                    <Font name="System Bold" size="13.0" />
-                                 </font>
-                              </Label>
-                              <JFXTextField fx:id="txtBusinessCode" focusColor="#2563eb" promptText="e.g. KUMARA-01" style="-fx-font-size: 16px; -fx-padding: 8 0 8 0; -fx-font-weight: bold;" unFocusColor="#cbd5e1" />
-                           </children>
-                        </VBox>
-                        <VBox spacing="6.0">
-                           <children>
-                              <Label text="Terminal Pairing Key" textFill="#1e293b">
-                                 <font>
-                                    <Font name="System Bold" size="13.0" />
-                                 </font>
-                              </Label>
-                              <JFXTextField fx:id="txtPairingKey" focusColor="#2563eb" promptText="e.g. 111-222" style="-fx-font-size: 16px; -fx-padding: 8 0 8 0; -fx-font-weight: bold;" unFocusColor="#cbd5e1" />
-                           </children>
-                        </VBox>
-                     </children>
-                     <VBox.margin>
-                        <Insets top="10.0" />
-                     </VBox.margin>
-                  </VBox>
+        <!-- Center Landscape Split-Card -->
+        <HBox alignment="CENTER" VBox.vgrow="ALWAYS" style="-fx-background-color: #f1f5f9;">
+            <children>
+                <StackPane HBox.hgrow="ALWAYS">
+                    <VBox alignment="CENTER" spacing="0">
+                        <HBox alignment="CENTER" spacing="0" maxWidth="1020" minHeight="540"
+                              style="-fx-background-color: white; -fx-background-radius: 28; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 30, 0, 0, 15); -fx-border-color: #e2e8f0; -fx-border-width: 1;">
+                            
+                            <!-- Left Column: Setup Guidance & Architecture -->
+                            <VBox spacing="20" alignment="TOP_LEFT" prefWidth="480" style="-fx-padding: 40 45;">
+                                <VBox spacing="6">
+                                    <HBox spacing="10" alignment="CENTER_LEFT">
+                                        <Region prefWidth="3" prefHeight="18" style="-fx-background-color: #2563eb; -fx-background-radius: 2;"/>
+                                        <Text text="HARDWARE SETUP" style="-fx-font-size: 11px; -fx-font-weight: bold; -fx-fill: #2563eb; -fx-letter-spacing: 1px;"/>
+                                    </HBox>
+                                    <Text text="Link Counter POS" style="-fx-font-size: 30px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                                    <Text text="Connect this touchscreen register to your cloud merchant account." style="-fx-font-size: 14px; -fx-fill: #64748b;"/>
+                                </VBox>
 
-                  <!-- Status & Error Notifications -->
-                  <VBox alignment="CENTER" spacing="8.0">
-                     <children>
-                        <Label fx:id="lblError" alignment="CENTER" style="-fx-background-color: #fee2e2; -fx-padding: 8 16; -fx-background-radius: 8;" text="Error message goes here" textFill="#b91c1c" visible="false" wrapText="true">
-                           <font>
-                              <Font size="13.0" />
-                           </font>
-                        </Label>
-                        <HBox alignment="CENTER" spacing="10.0">
-                           <children>
-                              <ProgressIndicator fx:id="progressIndicator" maxHeight="20.0" maxWidth="20.0" visible="false" />
-                              <Label fx:id="lblStatus" text="Ready to pair with Cloud Database" textFill="#64748b">
-                                 <font>
-                                    <Font size="12.0" />
-                                 </font>
-                              </Label>
-                           </children>
+                                <!-- Step Cards -->
+                                <VBox spacing="12">
+                                    <HBox spacing="14" alignment="CENTER_LEFT" style="-fx-background-color: #f8fafc; -fx-padding: 12 16; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12;">
+                                        <Text text="1" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #2563eb;"/>
+                                        <VBox spacing="2">
+                                            <Text text="Business Code" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                                            <Text text="Your unique merchant identifier (e.g. KUMARA-01)" style="-fx-font-size: 11px; -fx-fill: #64748b;"/>
+                                        </VBox>
+                                    </HBox>
+
+                                    <HBox spacing="14" alignment="CENTER_LEFT" style="-fx-background-color: #f8fafc; -fx-padding: 12 16; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12;">
+                                        <Text text="2" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #2563eb;"/>
+                                        <VBox spacing="2">
+                                            <Text text="Activation Key" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                                            <Text text="6-digit Pairing Key from Web Admin Portal" style="-fx-font-size: 11px; -fx-fill: #64748b;"/>
+                                        </VBox>
+                                    </HBox>
+
+                                    <HBox spacing="14" alignment="CENTER_LEFT" style="-fx-background-color: #f8fafc; -fx-padding: 12 16; -fx-background-radius: 12; -fx-border-color: #e2e8f0; -fx-border-radius: 12;">
+                                        <Text text="3" style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-fill: #2563eb;"/>
+                                        <VBox spacing="2">
+                                            <Text text="Hardware Security Lock" style="-fx-font-size: 13px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                                            <Text text="Locks this register's UUID to your store inventory &amp; staff" style="-fx-font-size: 11px; -fx-fill: #64748b;"/>
+                                        </VBox>
+                                    </HBox>
+                                </VBox>
+
+                                <HBox alignment="CENTER_LEFT" style="-fx-background-color: #eff6ff; -fx-padding: 10 14; -fx-background-radius: 10; -fx-border-color: #bfdbfe; -fx-border-radius: 10;">
+                                    <Text text="💡 Generate keys in Web Admin under Cashier Terminals" style="-fx-font-size: 11px; -fx-fill: #1d4ed8;"/>
+                                </HBox>
+                            </VBox>
+
+                            <!-- Vertical Divider -->
+                            <Pane prefWidth="1" prefHeight="540" style="-fx-background-color: #f1f5f9;"/>
+
+                            <!-- Right Column: Input Form -->
+                            <VBox spacing="22" alignment="CENTER_LEFT" prefWidth="540" style="-fx-background-color: #f8fafc; -fx-background-radius: 0 28 28 0; -fx-padding: 40 45;">
+                                <VBox spacing="4">
+                                    <Text text="ENTER TERMINAL CREDENTIALS" style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-fill: #64748b; -fx-letter-spacing: 1px;"/>
+                                    <Text text="Pair this physical counter" style="-fx-font-size: 20px; -fx-font-weight: bold; -fx-fill: #1e293b;"/>
+                                </VBox>
+
+                                <!-- Form Fields -->
+                                <VBox spacing="16">
+                                    <VBox spacing="6">
+                                        <Label text="Business Code" textFill="#1e293b">
+                                            <font>
+                                                <Font name="System Bold" size="13.0" />
+                                            </font>
+                                        </Label>
+                                        <JFXTextField fx:id="txtBusinessCode" focusColor="#2563eb" promptText="e.g. KUMARA-01" 
+                                                      style="-fx-font-size: 16px; -fx-padding: 8 0 8 0; -fx-font-weight: bold; -fx-text-transform: uppercase;" unFocusColor="#cbd5e1" />
+                                    </VBox>
+
+                                    <VBox spacing="6">
+                                        <Label text="Terminal Pairing Key" textFill="#1e293b">
+                                            <font>
+                                                <Font name="System Bold" size="13.0" />
+                                            </font>
+                                        </Label>
+                                        <JFXTextField fx:id="txtPairingKey" focusColor="#2563eb" promptText="e.g. 111-222" 
+                                                      style="-fx-font-size: 16px; -fx-padding: 8 0 8 0; -fx-font-weight: bold;" unFocusColor="#cbd5e1" />
+                                    </VBox>
+                                </VBox>
+
+                                <!-- Status / Error -->
+                                <VBox spacing="6">
+                                    <Label fx:id="lblError" alignment="CENTER" maxWidth="Infinity" 
+                                           style="-fx-background-color: #fee2e2; -fx-padding: 8 16; -fx-background-radius: 8;" 
+                                           text="Error message" textFill="#b91c1c" visible="false" wrapText="true">
+                                        <font>
+                                            <Font size="12.0" />
+                                        </font>
+                                    </Label>
+                                    <HBox alignment="CENTER_LEFT" spacing="8">
+                                        <ProgressIndicator fx:id="progressIndicator" maxHeight="18.0" maxWidth="18.0" visible="false" />
+                                        <Label fx:id="lblStatus" text="Ready to pair with Cloud Database" textFill="#64748b">
+                                            <font>
+                                                <Font size="12.0" />
+                                            </font>
+                                        </Label>
+                                    </HBox>
+                                </VBox>
+
+                                <!-- Connect Button -->
+                                <JFXButton fx:id="btnConnect" maxWidth="Infinity" onAction="#btnConnectOnAction" prefHeight="52.0" 
+                                           style="-fx-background-color: #2563eb; -fx-text-fill: white; -fx-font-size: 16px; -fx-font-weight: bold; -fx-background-radius: 12; -fx-cursor: hand; -fx-effect: dropshadow(gaussian, rgba(37,99,235,0.25), 10, 0, 0, 4);" 
+                                           text="Connect &amp; Activate Register" />
+
+                                <HBox alignment="CENTER" spacing="8">
+                                    <Text text="🔒 Encrypted Hardware Handshake" style="-fx-font-size: 11px; -fx-fill: #94a3b8;"/>
+                                </HBox>
+                            </VBox>
                         </HBox>
-                     </children>
-                  </VBox>
 
-                  <!-- Action Button -->
-                  <JFXButton fx:id="btnConnect" maxWidth="1.7976931348623157E308" onAction="#btnConnectOnAction" prefHeight="50.0" style="-fx-background-color: #2563eb; -fx-background-radius: 10; -fx-cursor: hand;" text="Connect &amp; Activate Register" textFill="WHITE">
-                     <font>
-                        <Font name="System Bold" size="16.0" />
-                     </font>
-                  </JFXButton>
-
-                  <!-- Explanatory Note -->
-                  <Label alignment="CENTER" text="💡 You can view or generate new Pairing Keys from the Web Admin Portal under 'Cashier Terminals'." textAlignment="CENTER" textFill="#94a3b8" wrapText="true">
-                     <font>
-                        <Font size="12.0" />
-                     </font>
-                  </Label>
-               </children>
-            </VBox>
-         </children>
-      </StackPane>
-   </children>
-</AnchorPane>
+                        <!-- Footer -->
+                        <HBox alignment="CENTER" spacing="15" style="-fx-padding: 20 0 0 0;">
+                            <Text text="© 2026 GreenCode Solutions" style="-fx-font-size: 12px; -fx-fill: #94a3b8;"/>
+                            <Circle radius="2" fill="#cbd5e1"/>
+                            <Text text="Universal POS Terminal" style="-fx-font-size: 12px; -fx-fill: #64748b; -fx-font-weight: bold;"/>
+                        </HBox>
+                    </VBox>
+                </StackPane>
+            </children>
+        </HBox>
+    </children>
+</VBox>
