@@ -51,7 +51,8 @@ public class DatabaseBootstrapService implements CommandLineRunner {
             "MANAGE_CUSTOMERS", "VIEW_CUSTOMERS",
             "VIEW_REPORTS", "EXPORT_REPORTS",
             "MANAGE_SETTINGS",
-            "VIEW_FINANCIALS", "MANAGE_RETURNS", "VIEW_RETURNS", "VIEW_CCTV"
+            "VIEW_FINANCIALS", "MANAGE_RETURNS", "VIEW_RETURNS", "VIEW_CCTV",
+            "MANAGE_USERS"
     };
 
     private static final String[] CASHIER_PERMISSIONS = {
